@@ -38,6 +38,9 @@ venv.bak/
 # Project specific
 .kiro/
 .claude/
+.aceflow/
+**/.aceflow/
+**/.claude/
 
 # OS specific
 .DS_Store
