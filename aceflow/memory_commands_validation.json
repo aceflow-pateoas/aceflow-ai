@@ -1,0 +1,115 @@
+{
+  "timestamp": "2025-07-27T16:26:00.778960",
+  "command_tests": [
+    {
+      "command": "enhanced_cli.py pateoas memory --help",
+      "success": true,
+      "expected_success": true,
+      "passed": true,
+      "stdout": "usage: enhanced_cli.py pateoas memory [-h]\n                                      {list,add,find,recall,smart-recall,clean}\n                                      ...\n\npositional arguments:\n  {list,add,find,recall,smart-recall,clean}\n                        记忆操作\n    list                列出记忆\n    add                 添加记忆到系统\n    find                基础记忆搜索\n    recall              智能记忆召回\n    smart-recall        高级智能记忆召回\n    clean               清理记忆\n\noptions:\n  -h, --help            show this help messa",
+      "stderr": ""
+    },
+    {
+      "command": "enhanced_cli.py pateoas memory list --help",
+      "success": true,
+      "expected_success": true,
+      "passed": true,
+      "stdout": "usage: enhanced_cli.py pateoas memory list [-h]\n                                           [--category {context,decision,pattern,issue,learning}]\n                                           [--limit LIMIT] [--recent]\n                                           [--tags TAGS]\n\noptions:\n  -h, --help            show this help message and exit\n  --category {context,decision,pattern,issue,learning}\n                        过滤记忆类别\n  --limit LIMIT         显示数量限制\n  --recent              仅显示最近的记忆\n  --tags TA",
+      "stderr": ""
+    },
+    {
+      "command": "enhanced_cli.py pateoas memory add --help",
+      "success": true,
+      "expected_success": true,
+      "passed": true,
+      "stdout": "usage: enhanced_cli.py pateoas memory add [-h]\n                                          [--category {context,decision,pattern,issue,learning}]\n                                          [--tags TAGS]\n                                          [--importance IMPORTANCE]\n                                          content\n\npositional arguments:\n  content               记忆内容(必需)\n\noptions:\n  -h, --help            show this help message and exit\n  --category {context,decision,pattern,issue,learning}\n     ",
+      "stderr": ""
+    },
+    {
+      "command": "enhanced_cli.py pateoas memory find --help",
+      "success": true,
+      "expected_success": true,
+      "passed": true,
+      "stdout": "usage: enhanced_cli.py pateoas memory find [-h] [--limit LIMIT]\n                                           [--category {context,decision,pattern,issue,learning}]\n                                           query\n\npositional arguments:\n  query                 搜索关键词\n\noptions:\n  -h, --help            show this help message and exit\n  --limit LIMIT         结果数量限制\n  --category {context,decision,pattern,issue,learning}\n                        限制搜索类别\n",
+      "stderr": ""
+    },
+    {
+      "command": "enhanced_cli.py pateoas memory recall --help",
+      "success": true,
+      "expected_success": true,
+      "passed": true,
+      "stdout": "usage: enhanced_cli.py pateoas memory recall [-h] [--context CONTEXT]\n                                             [--limit LIMIT]\n                                             [--min-relevance MIN_RELEVANCE]\n                                             query\n\npositional arguments:\n  query                 召回查询\n\noptions:\n  -h, --help            show this help message and exit\n  --context CONTEXT     当前上下文信息\n  --limit LIMIT         最大返回数量\n  --min-relevance MIN_RELEVANCE\n                        最低相关",
+      "stderr": ""
+    },
+    {
+      "command": "enhanced_cli.py pateoas memory smart-recall --help",
+      "success": true,
+      "expected_success": true,
+      "passed": true,
+      "stdout": "usage: enhanced_cli.py pateoas memory smart-recall [-h] [--context CONTEXT]\n                                                   [--limit LIMIT]\n                                                   [--include-patterns]\n                                                   [--priority-recent]\n                                                   [--detailed]\n                                                   query\n\npositional arguments:\n  query               智能召回查询\n\noptions:\n  -h, --help          show this",
+      "stderr": ""
+    },
+    {
+      "command": "enhanced_cli.py pateoas memory clean --help",
+      "success": true,
+      "expected_success": true,
+      "passed": true,
+      "stdout": "usage: enhanced_cli.py pateoas memory clean [-h] [--days DAYS]\n                                            [--category {context,decision,pattern,issue,learning}]\n                                            [--confirm] [--dry-run]\n\noptions:\n  -h, --help            show this help message and exit\n  --days DAYS           清理N天前的记忆\n  --category {context,decision,pattern,issue,learning}\n                        仅清理指定类别\n  --confirm             跳过确认提示\n  --dry-run             仅预览，不实际删除\n",
+      "stderr": ""
+    },
+    {
+      "command": "enhanced_cli.py pateoas memory search 'test'",
+      "success": false,
+      "expected_success": false,
+      "passed": true,
+      "stdout": "",
+      "stderr": "usage: enhanced_cli.py pateoas memory [-h]\n                                      {list,add,find,recall,smart-recall,clean}\n                                      ...\nenhanced_cli.py pateoas memory: err"
+    },
+    {
+      "command": "enhanced_cli.py pateoas memory intelligent-recall --query 'test'",
+      "success": false,
+      "expected_success": false,
+      "passed": true,
+      "stdout": "",
+      "stderr": "usage: enhanced_cli.py pateoas memory [-h]\n                                      {list,add,find,recall,smart-recall,clean}\n                                      ...\nenhanced_cli.py pateoas memory: err"
+    },
+    {
+      "command": "enhanced_cli.py pateoas memory add \"CLI验证测试记忆\" --category pattern --tags \"测试,验证\"",
+      "success": true,
+      "expected_success": true,
+      "passed": true,
+      "stdout": "✓ PATEOAS增强引擎已初始化 (项目ID: aceflow_20250726_161213)\n🧠 PATEOAS 智能引擎已激活\n💾 添加记忆到pattern类别...\n✅ 记忆已添加\n   ID: None\n   类别: pattern\n   重要性: 0.5\n   标签: 测试, 验证\n   内容: CLI验证测试记忆\n",
+      "stderr": ""
+    },
+    {
+      "command": "enhanced_cli.py pateoas memory find \"CLI验证\"",
+      "success": true,
+      "expected_success": true,
+      "passed": true,
+      "stdout": "✓ PATEOAS增强引擎已初始化 (项目ID: aceflow_20250726_161213)\n🧠 PATEOAS 智能引擎已激活\n🔍 基础搜索: 'CLI验证'\n\n🔍 找到 3 条匹配记忆:\n==================================================\n1. [pattern] CLI验证测试记忆\n   📅 2025-07-27T16:26:03.106564\n   🏷️ 测试, 验证\n\n2. [pattern] 优化了CLI命令结构，解决了参数冲突问题\n   📅 2025-07-27T16:23:29.045562\n   🏷️ CLI, 优化, 参数\n\n3. [context] 集成了Cline VSCode扩展并配置了智能对话功能\n   📅 2025-07-27T15:58:51.080521\n   🏷️ Cline, VSCode, 集成\n\n",
+      "stderr": ""
+    },
+    {
+      "command": "enhanced_cli.py pateoas memory recall \"验证测试\" --limit 3",
+      "success": true,
+      "expected_success": true,
+      "passed": true,
+      "stdout": "✓ PATEOAS增强引擎已初始化 (项目ID: aceflow_20250726_161213)\n🧠 PATEOAS 智能引擎已激活\n🧠 智能召回: '验证测试'\n   🎯 最低相关性: 0.3\n\n🧠 智能召回结果: '验证测试' (共3条)\n============================================================\n1. [pattern] CLI验证测试记忆\n   🎯 相关性: 0.71\n   📅 创建: 2025-07-27T16:26:03.106564\n   🏷️ 标签: 测试, 验证\n\n2. [decision] 任务分析: 开发用户认证系统 -> 推荐模式: standard\n   🎯 相关性: 0.42\n   📅 创建: 2025-07-26T16:12:24.072672\n   🏷️ 标签: 任务分析, 模式推荐, standard\n\n3. [context] 集成了Cline VSCode扩展并配置了智能对话功能\n   🎯 相关性: 0.40\n   📅 创建: 2025-07-27T15:58:51.080521\n  ",
+      "stderr": ""
+    },
+    {
+      "command": "enhanced_cli.py pateoas memory list --limit 3",
+      "success": true,
+      "expected_success": true,
+      "passed": true,
+      "stdout": "✓ PATEOAS增强引擎已初始化 (项目ID: aceflow_20250726_161213)\n🧠 PATEOAS 智能引擎已激活\n📚 记忆列表 (最多3条)\n\n📭 未找到符合条件的记忆\n",
+      "stderr": ""
+    }
+  ],
+  "summary": {
+    "total_tests": 13,
+    "passed_tests": 13,
+    "success_rate": 1.0,
+    "overall_status": "PASS"
+  }
+}
