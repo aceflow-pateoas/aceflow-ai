@@ -34,8 +34,8 @@
 **实际操作**:
 ```bash
 # 显示终端
-git clone https://github.com/your-org/aceflow-pateoas-v3.git
-cd aceflow-pateoas-v3
+git clone https://github.com/aceflow-pateoas/aceflow-ai.git
+cd aceflow-ai
 
 # 运行一键安装
 ./quick_verify.sh

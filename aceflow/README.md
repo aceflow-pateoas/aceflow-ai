@@ -24,35 +24,88 @@ ACEFLOW: "Based on your project history, I see you previously used JWT with refr
          Here's the pattern from your user management module, adapted for this new feature..."
 ```
 
-## 🚀 5-Minute Quick Start
+## 🚀 30秒极速安装 ⭐ (专为Cline用户优化)
 
-### Prerequisites
-- Python 3.8+ 
-- VSCode with [Cline extension](https://marketplace.visualstudio.com/items?itemName=saoudrizwan.claude-dev)
-- Git
-
-### One-Click Installation
+### 🌐 一键安装 (推荐方式)
 
 ```bash
-# Clone the repository
-git clone https://github.com/aceflow-ai/aceflow-ai.git
-cd aceflow-ai
-
-# Quick verification (recommended)
-./quick_verify.sh
-
-# Start the development environment
-./start_pateoas_dev.sh
+# 🔥 在线一键安装 - 30秒搞定，开箱即用
+curl -fsSL https://raw.githubusercontent.com/aceflow-ai/aceflow-ai/main/aceflow/install.sh | bash
 ```
 
-### Instant Experience
+**仅此一条命令！** 🎉 自动完成：
+- ✅ 智能环境检测 & 依赖安装
+- ✅ VSCode & Cline扩展自动配置  
+- ✅ 全局命令创建 (`aceflow`, `aceflow-start`)
+- ✅ 项目初始化 & 功能验证
 
-Once installed, try these natural language commands with Cline:
+### 🎯 立即开始使用
 
-- 💬 **"Check project status"** → Get AI-enhanced project insights
-- 🧠 **"What similar work have we done before?"** → Intelligent memory recall
-- 🎯 **"I need to add payment functionality"** → Smart task analysis and workflow recommendation
-- 🔧 **"The login feature has issues"** → Adaptive error analysis and recovery suggestions
+安装完成后，3种方式任选一种：
+
+```bash
+# 方式1⭐ 超简模式 (推荐新手)
+aceflow-start
+
+# 方式2🔧 命令行模式  
+aceflow status              # 检查状态
+aceflow memory add '记忆内容' # 添加记忆
+
+# 方式3🎨 项目模式
+cd 你的项目目录
+aceflow init               # 初始化AceFlow项目
+```
+
+### 💬 与Cline对话示例
+
+一旦VSCode+Cline启动，即可自然对话：
+
+- 💬 **"检查项目状态"** → 获取AI增强的项目洞察
+- 🧠 **"之前做过类似的功能吗？"** → 智能记忆召回
+- 🎯 **"我要添加支付功能"** → 智能任务分析和工作流推荐
+- 🔧 **"登录功能出问题了"** → 自适应错误分析和修复建议
+
+### 📦 其他安装方式
+
+<details>
+<summary>👈 点击查看本地安装等其他选项</summary>
+
+**本地安装方式:**
+```bash
+# 本地克隆安装
+git clone https://github.com/aceflow-ai/aceflow-ai.git
+cd aceflow-ai/aceflow
+
+# 🔥 超级快速安装 - 自动处理所有配置  
+./super_quick_install.sh
+
+# 🚀 立即开始使用
+./aceflow_start.sh
+```
+
+**开发者模式:**
+```bash
+python3 smart_deps.py        # 智能依赖管理
+source activate_aceflow.sh   # 激活环境
+./start_pateoas_dev.sh       # 启动开发环境
+```
+
+**标准安装方式:**
+```bash
+./quick_install.sh          # 传统安装
+./quick_verify.sh           # 验证安装
+./start_pateoas_dev.sh      # 启动环境
+```
+
+**手动设置:** 
+```bash
+pip install -r requirements.txt
+python3 enhanced_cli.py pateoas status
+code aceflow-pateoas-workspace.code-workspace
+```
+
+</details>
+
 
 ## 🏗️ Core Architecture
 
