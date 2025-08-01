@@ -48,6 +48,9 @@ class PATEOASEnhancedEngine:
         # 兼容性：保持旧的性能指标接口
         self.performance_metrics = self.performance_monitor.current_metrics
         
+        # 兼容性：为state_manager添加state_continuity别名
+        self.state_continuity = self.state_manager
+        
         # 会话状态
         self.current_session = {
             'session_id': f"session_{int(time.time())}",
