@@ -17,6 +17,15 @@ from datetime import datetime, timezone
 from typing import Optional, Dict, List, Any
 import tempfile
 
+# 导入平台兼容性模块
+try:
+    from utils.platform_compatibility import (
+        PlatformUtils, SafeFileOperations, EnhancedErrorHandler
+    )
+    COMPATIBILITY_AVAILABLE = True
+except ImportError:
+    COMPATIBILITY_AVAILABLE = False
+
 # 脚本信息
 SCRIPT_NAME = "aceflow-init.py"
 VERSION = "3.0.0"
