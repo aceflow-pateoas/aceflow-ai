@@ -2,6 +2,29 @@
 
 AI-driven workflow management through Model Context Protocol.
 
+## 📁 Project Structure
+
+```
+aceflow-mcp-server/
+├── aceflow_mcp_server/          # Core package directory
+│   ├── core/                    # Core functionality modules
+│   ├── main.py                  # Main entry point
+│   ├── tools.py                 # Tool implementations
+│   └── ...
+├── tests/                       # Formal test suite
+├── examples/                    # Examples and demo code
+├── scripts/                     # Build and deployment scripts
+│   ├── build/                   # Build-related scripts
+│   ├── deploy/                  # Deployment scripts
+│   └── dev/                     # Development tools
+├── docs/                        # Documentation
+│   ├── user-guide/              # User guides
+│   ├── developer-guide/         # Developer guides
+│   └── project/                 # Project documentation
+├── dev-tests/                   # Development tests and experiments
+└── pyproject.toml               # Project configuration
+```
+
 ## Overview
 
 AceFlow MCP Server provides structured software development workflows through the Model Context Protocol (MCP), enabling AI clients like Kiro, Cursor, and Claude to manage projects with standardized processes.

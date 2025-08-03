@@ -27,30 +27,38 @@ class TestIntegration:
     
     def call_tool(self, tool_name, *args, **kwargs):
         """Helper method to call tools."""
-        # Use the global tools instance from server module
-        from aceflow_mcp_server.server import tools
+        # Use the tools instance directly
+        from aceflow_mcp_server.tools import AceFlowTools
+        tools = AceFlowTools()
         tool = getattr(tools, tool_name)
         return tool(*args, **kwargs)
     
     def call_resource(self, resource_name, *args, **kwargs):
         """Helper method to call resources."""
-        # Use the global resources instance from server module
-        from aceflow_mcp_server.server import resources
+        # Use the resources instance directly
+        from aceflow_mcp_server.resources import AceFlowResources
+        resources = AceFlowResources()
         resource = getattr(resources, resource_name)
         return resource(*args, **kwargs)
     
     def call_prompt(self, prompt_name, *args, **kwargs):
         """Helper method to call prompts."""
-        # Use the global prompts instance from server module
-        from aceflow_mcp_server.server import prompts
+        # Use the prompts instance directly
+        from aceflow_mcp_server.prompts import AceFlowPrompts
+        prompts = AceFlowPrompts()
         prompt = getattr(prompts, prompt_name)
         return prompt(*args, **kwargs)
     
     def test_server_initialization(self):
         """Test that MCP server initializes correctly."""
         assert self.server.mcp is not None
-        # Check that global instances exist
-        from aceflow_mcp_server.server import tools, resources, prompts
+        # Check that component functions exist and can create instances
+        from aceflow_mcp_server.server import get_tools, get_resources, get_prompts
+        
+        tools = get_tools()
+        resources = get_resources()
+        prompts = get_prompts()
+        
         assert tools is not None
         assert resources is not None
         assert prompts is not None

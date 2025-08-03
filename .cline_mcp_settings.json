@@ -1,0 +1,11 @@
+{
+  "mcpServers": {
+    "aceflow": {
+      "command": "uvx",
+      "args": ["aceflow-mcp-server@1.0.3"],
+      "env": {
+        "ACEFLOW_LOG_LEVEL": "WARNING"
+      }
+    }
+  }
+}
