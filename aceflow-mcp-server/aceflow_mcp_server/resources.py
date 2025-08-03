@@ -1,6 +1,5 @@
 """AceFlow MCP Resources implementation."""
 
-from fastmcp.resources import resource
 from typing import Dict, Any
 import json
 from pathlib import Path
@@ -14,14 +13,16 @@ class AceFlowResources:
         """Initialize resources."""
         pass
     
-    def _get_current_directory(self) -> Path:
+    @staticmethod
+    def _get_current_directory() -> Path:
         """Get current working directory."""
         return Path.cwd()
     
-    def _find_aceflow_project_root(self, start_path: Path = None) -> Path:
+    @staticmethod
+    def _find_aceflow_project_root(start_path: Path = None) -> Path:
         """Find the AceFlow project root directory."""
         if start_path is None:
-            start_path = self._get_current_directory()
+            start_path = AceFlowResources._get_current_directory()
         
         current = start_path.resolve()
         
@@ -34,11 +35,11 @@ class AceFlowResources:
         # If not found, return current directory
         return start_path
     
-    @resource("aceflow://project/state")
-    def project_state(self) -> str:
+    @staticmethod
+    def project_state(project_id: str = "current") -> str:
         """Get current project state."""
         try:
-            project_root = self._find_aceflow_project_root()
+            project_root = AceFlowResources._find_aceflow_project_root()
             state_file = project_root / ".aceflow" / "current_state.json"
             
             if state_file.exists():
@@ -73,11 +74,11 @@ class AceFlowResources:
             }
             return json.dumps(error_state, indent=2, ensure_ascii=False)
     
-    @resource("aceflow://workflow/config")
-    def workflow_config(self) -> str:
+    @staticmethod
+    def workflow_config(config_id: str = "default") -> str:
         """Get workflow configuration."""
         try:
-            project_root = self._find_aceflow_project_root()
+            project_root = AceFlowResources._find_aceflow_project_root()
             template_file = project_root / ".aceflow" / "template.yaml"
             
             if template_file.exists():
@@ -109,8 +110,8 @@ class AceFlowResources:
             }
             return json.dumps(error_config, indent=2, ensure_ascii=False)
     
-    @resource("aceflow://stage/guide/{stage}")
-    def stage_guide(self, stage: str) -> str:
+    @staticmethod
+    def stage_guide(stage: str) -> str:
         """Get stage-specific guidance."""
         try:
             # Stage guides based on common AceFlow stages

@@ -23,9 +23,14 @@ class TestAceFlowTools:
         os.chdir(self.original_cwd)
         # Note: temp_dir cleanup would be handled by tempfile
     
+    def call_tool(self, tool_name, *args, **kwargs):
+        """Helper method to call tools."""
+        tool = getattr(self.tools, tool_name)
+        return tool(*args, **kwargs)
+    
     def test_aceflow_init_minimal_mode(self):
         """Test project initialization in minimal mode."""
-        result = self.tools.aceflow_init(
+        result = self.call_tool("aceflow_init",
             mode="minimal",
             project_name="test-project"
         )
@@ -42,7 +47,7 @@ class TestAceFlowTools:
     
     def test_aceflow_init_invalid_mode(self):
         """Test project initialization with invalid mode."""
-        result = self.tools.aceflow_init(mode="invalid")
+        result = self.call_tool("aceflow_init", mode="invalid")
         
         assert result["success"] is False
         assert "Invalid mode" in result["error"]
@@ -56,7 +61,7 @@ class TestAceFlowTools:
             mode_dir = Path(f"test-{mode}")
             mode_dir.mkdir(exist_ok=True)
             
-            result = self.tools.aceflow_init(
+            result = self.call_tool("aceflow_init",
                 mode=mode,
                 project_name=f"test-{mode}",
                 directory=str(mode_dir)
@@ -73,9 +78,9 @@ class TestAceFlowTools:
     def test_aceflow_stage_status(self):
         """Test stage status functionality."""
         # First initialize a project
-        self.tools.aceflow_init(mode="standard", project_name="test")
+        self.call_tool("aceflow_init", mode="standard", project_name="test")
         
-        result = self.tools.aceflow_stage(action="status")
+        result = self.call_tool("aceflow_stage", action="status")
         
         assert result["success"] is True
         assert "result" in result
@@ -83,7 +88,7 @@ class TestAceFlowTools:
     
     def test_aceflow_stage_list(self):
         """Test stage list functionality."""
-        result = self.tools.aceflow_stage(action="list")
+        result = self.call_tool("aceflow_stage", action="list")
         
         assert result["success"] is True
         assert "stages" in result["result"]
@@ -91,7 +96,7 @@ class TestAceFlowTools:
     
     def test_aceflow_validate_basic(self):
         """Test basic validation functionality."""
-        result = self.tools.aceflow_validate(mode="basic")
+        result = self.call_tool("aceflow_validate", mode="basic")
         
         assert result["success"] is True
         assert "validation_result" in result
@@ -99,7 +104,7 @@ class TestAceFlowTools:
     
     def test_aceflow_template_list(self):
         """Test template listing functionality."""
-        result = self.tools.aceflow_template(action="list")
+        result = self.call_tool("aceflow_template", action="list")
         
         assert result["success"] is True
         assert "available_templates" in result["result"]
@@ -107,7 +112,7 @@ class TestAceFlowTools:
     
     def test_project_state_file_creation(self):
         """Test that project state file is created correctly."""
-        result = self.tools.aceflow_init(
+        result = self.call_tool("aceflow_init",
             mode="standard",
             project_name="state-test"
         )
@@ -128,7 +133,7 @@ class TestAceFlowTools:
     
     def test_clinerules_file_content(self):
         """Test that .clinerules file contains correct content."""
-        result = self.tools.aceflow_init(
+        result = self.call_tool("aceflow_init",
             mode="complete",
             project_name="clinerules-test"
         )
@@ -150,7 +155,7 @@ class TestAceFlowTools:
         """Test project initialization with custom directory."""
         custom_dir = Path("custom-project-dir")
         
-        result = self.tools.aceflow_init(
+        result = self.call_tool("aceflow_init",
             mode="minimal",
             project_name="dir-test",
             directory=str(custom_dir)
@@ -160,6 +165,83 @@ class TestAceFlowTools:
         assert custom_dir.exists()
         assert (custom_dir / ".clinerules").exists()
         assert (custom_dir / ".aceflow").exists()
+    
+    def test_aceflow_stage_next(self):
+        """Test stage next functionality."""
+        # First initialize a project
+        self.call_tool("aceflow_init", mode="standard", project_name="test")
+        
+        result = self.call_tool("aceflow_stage", action="next")
+        
+        assert result["success"] is True
+        assert "result" in result
+        assert "previous_stage" in result["result"]
+        assert "current_stage" in result["result"]
+    
+    def test_aceflow_stage_reset(self):
+        """Test stage reset functionality."""
+        result = self.call_tool("aceflow_stage", action="reset")
+        
+        assert result["success"] is True
+        assert result["result"]["current_stage"] == "user_stories"
+        assert result["result"]["progress"] == 0
+    
+    def test_aceflow_stage_invalid_action(self):
+        """Test stage with invalid action."""
+        result = self.call_tool("aceflow_stage", action="invalid")
+        
+        assert result["success"] is False
+        assert "Invalid action" in result["error"]
+    
+    def test_aceflow_validate_complete_mode(self):
+        """Test validation in complete mode."""
+        result = self.call_tool("aceflow_validate", mode="complete", fix=True, report=True)
+        
+        assert result["success"] is True
+        assert result["validation_result"]["mode"] == "complete"
+        assert result["validation_result"]["auto_fix_enabled"] is True
+        assert result["validation_result"]["report_generated"] is True
+    
+    def test_aceflow_template_apply(self):
+        """Test template apply functionality."""
+        result = self.call_tool("aceflow_template", action="apply", template="minimal")
+        
+        assert result["success"] is True
+        assert result["result"]["template"] == "minimal"
+        assert result["result"]["applied"] is True
+    
+    def test_aceflow_template_apply_no_template(self):
+        """Test template apply without template name."""
+        result = self.call_tool("aceflow_template", action="apply")
+        
+        assert result["success"] is False
+        assert "required" in result["error"]
+    
+    def test_aceflow_template_validate(self):
+        """Test template validate functionality."""
+        result = self.call_tool("aceflow_template", action="validate")
+        
+        assert result["success"] is True
+        assert "template" in result["result"]
+        assert "valid" in result["result"]
+    
+    def test_aceflow_template_invalid_action(self):
+        """Test template with invalid action."""
+        result = self.call_tool("aceflow_template", action="invalid")
+        
+        assert result["success"] is False
+        assert "Invalid action" in result["error"]
+    
+    def test_aceflow_init_existing_project(self):
+        """Test initializing project in directory with existing project."""
+        # First initialize a project
+        self.call_tool("aceflow_init", mode="minimal", project_name="first")
+        
+        # Try to initialize again
+        result = self.call_tool("aceflow_init", mode="standard", project_name="second")
+        
+        assert result["success"] is False
+        assert "already contains" in result["error"]
 
 
 if __name__ == "__main__":

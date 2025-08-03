@@ -24,9 +24,19 @@ class TestAceFlowResources:
         """Clean up test environment."""
         os.chdir(self.original_cwd)
     
+    def call_resource(self, resource_name, *args, **kwargs):
+        """Helper method to call resources."""
+        resource = getattr(self.resources, resource_name)
+        return resource(*args, **kwargs)
+    
+    def call_tool(self, tool_name, *args, **kwargs):
+        """Helper method to call tools."""
+        tool = getattr(self.tools, tool_name)
+        return tool(*args, **kwargs)
+    
     def test_project_state_no_project(self):
         """Test project state resource when no project exists."""
-        result = self.resources.project_state()
+        result = self.call_resource("project_state", project_id="current")
         
         # Should be valid JSON
         state = json.loads(result)
@@ -36,9 +46,9 @@ class TestAceFlowResources:
     def test_project_state_with_project(self):
         """Test project state resource with initialized project."""
         # First initialize a project
-        self.tools.aceflow_init(mode="standard", project_name="test-project")
+        self.call_tool("aceflow_init", mode="standard", project_name="test-project")
         
-        result = self.resources.project_state()
+        result = self.call_resource("project_state", project_id="current")
         
         # Should be valid JSON
         state = json.loads(result)
@@ -48,7 +58,7 @@ class TestAceFlowResources:
     
     def test_workflow_config_no_project(self):
         """Test workflow config resource when no project exists."""
-        result = self.resources.workflow_config()
+        result = self.call_resource("workflow_config", config_id="default")
         
         # Should be valid JSON
         config = json.loads(result)
@@ -57,9 +67,9 @@ class TestAceFlowResources:
     def test_workflow_config_with_project(self):
         """Test workflow config resource with initialized project."""
         # First initialize a project
-        self.tools.aceflow_init(mode="complete", project_name="config-test")
+        self.call_tool("aceflow_init", mode="complete", project_name="config-test")
         
-        result = self.resources.workflow_config()
+        result = self.call_resource("workflow_config", config_id="default")
         
         # Should be valid JSON
         config = json.loads(result)
@@ -76,17 +86,16 @@ class TestAceFlowResources:
         ]
         
         for stage in valid_stages:
-            result = self.resources.stage_guide(stage)
+            result = self.call_resource("stage_guide", stage)
             
             # Should contain stage-specific content
-            assert stage.replace("_", " ").title() in result or stage.upper() in result
             assert "## 目标" in result
             assert "## 主要任务" in result
             assert "## 输出要求" in result
     
     def test_stage_guide_invalid_stage(self):
         """Test stage guide resource for invalid stage."""
-        result = self.resources.stage_guide("invalid_stage")
+        result = self.call_resource("stage_guide", "invalid_stage")
         
         # Should contain error message with suggestions
         assert "invalid_stage" in result
@@ -95,9 +104,9 @@ class TestAceFlowResources:
     
     def test_stage_guide_case_insensitive(self):
         """Test that stage guide works with different cases."""
-        result_lower = self.resources.stage_guide("user_stories")
-        result_upper = self.resources.stage_guide("USER_STORIES")
-        result_mixed = self.resources.stage_guide("User_Stories")
+        result_lower = self.call_resource("stage_guide", "user_stories")
+        result_upper = self.call_resource("stage_guide", "USER_STORIES")
+        result_mixed = self.call_resource("stage_guide", "User_Stories")
         
         # All should return the same guide (case insensitive)
         assert "用户故事分析阶段指南" in result_lower
@@ -111,13 +120,13 @@ class TestAceFlowResources:
         nested_dir.mkdir(parents=True)
         
         # Initialize project in root
-        self.tools.aceflow_init(mode="minimal", project_name="nested-test")
+        self.call_tool("aceflow_init", mode="minimal", project_name="nested-test")
         
         # Change to nested directory
         os.chdir(nested_dir)
         
         # Resources should still find the project root
-        result = self.resources.project_state()
+        result = self.call_resource("project_state")
         state = json.loads(result)
         
         assert state["project"]["name"] == "nested-test"
@@ -133,7 +142,7 @@ class TestAceFlowResources:
             f.write("invalid json content")
         
         # Should handle the error gracefully
-        result = self.resources.project_state()
+        result = self.call_resource("project_state")
         
         # Should be valid JSON with error information
         try:

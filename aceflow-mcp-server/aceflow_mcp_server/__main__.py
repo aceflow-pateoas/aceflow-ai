@@ -1,3 +1,4 @@
+"""Entry point for aceflow-mcp-server when run as a module."""
 import sys
 from .server import main
 

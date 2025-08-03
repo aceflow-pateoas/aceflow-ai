@@ -1,6 +1,5 @@
 """AceFlow MCP Tools implementation."""
 
-from fastmcp.tools import tool
 from typing import Dict, Any, Optional, List
 import json
 import os
@@ -8,6 +7,9 @@ import sys
 from pathlib import Path
 import shutil
 import datetime
+
+# Import core functionality
+from .core import ProjectManager, WorkflowEngine, TemplateManager
 
 # Import existing AceFlow functionality
 current_dir = Path(__file__).parent
@@ -41,8 +43,10 @@ class AceFlowTools:
         self.platform_utils = PlatformUtils()
         self.file_ops = SafeFileOperations()
         self.error_handler = EnhancedErrorHandler()
+        self.project_manager = ProjectManager()
+        self.workflow_engine = WorkflowEngine()
+        self.template_manager = TemplateManager()
     
-    @tool
     def aceflow_init(
         self,
         mode: str,
@@ -520,7 +524,6 @@ quality_gates:
         
         return descriptions.get(mode, descriptions["standard"])
     
-    @tool  
     def aceflow_stage(
         self,
         action: str,
@@ -536,37 +539,41 @@ quality_gates:
             Dict with success status and stage information
         """
         try:
-            # This is a placeholder - in real implementation, this would
-            # integrate with the existing aceflow-stage.py functionality
-            
             if action == "status":
+                result = self.workflow_engine.get_current_status()
                 return {
                     "success": True,
                     "action": action,
-                    "result": {
-                        "current_stage": "user_stories",
-                        "progress": 25,
-                        "completed_stages": [],
-                        "next_stage": "task_breakdown"
-                    }
+                    "result": result
+                }
+            elif action == "next":
+                result = self.workflow_engine.advance_to_next_stage()
+                return {
+                    "success": True,
+                    "action": action,
+                    "result": result
                 }
             elif action == "list":
+                stages = self.workflow_engine.list_all_stages()
                 return {
                     "success": True,
                     "action": action,
                     "result": {
-                        "stages": [
-                            "user_stories", "task_breakdown", "test_design",
-                            "implementation", "unit_test", "integration_test", 
-                            "code_review", "demo"
-                        ]
+                        "stages": stages
                     }
+                }
+            elif action == "reset":
+                result = self.workflow_engine.reset_project()
+                return {
+                    "success": True,
+                    "action": action,
+                    "result": result
                 }
             else:
                 return {
                     "success": False,
-                    "error": f"Action '{action}' not yet implemented",
-                    "message": "This tool is under development"
+                    "error": f"Invalid action '{action}'. Valid actions: status, next, list, reset",
+                    "message": "Action not supported"
                 }
                 
         except Exception as e:
@@ -576,7 +583,6 @@ quality_gates:
                 "message": f"Failed to execute stage action: {action}"
             }
     
-    @tool
     def aceflow_validate(
         self,
         mode: str = "basic",
@@ -594,21 +600,21 @@ quality_gates:
             Dict with validation results
         """
         try:
-            # Placeholder implementation
+            validator = self.project_manager.get_validator()
+            validation_result = validator.validate(mode=mode, auto_fix=fix, generate_report=report)
+            
             return {
                 "success": True,
                 "validation_result": {
-                    "status": "passed",
-                    "checks_total": 10,
-                    "checks_passed": 8,
-                    "checks_failed": 2,
-                    "warnings": 1,
-                    "issues": [
-                        "Missing documentation in aceflow_result/",
-                        "Template validation incomplete"
-                    ]
+                    "status": validation_result["status"],
+                    "checks_total": validation_result["checks"]["total"],
+                    "checks_passed": validation_result["checks"]["passed"],
+                    "checks_failed": validation_result["checks"]["failed"],
+                    "mode": mode,
+                    "auto_fix_enabled": fix,
+                    "report_generated": report
                 },
-                "message": "Validation completed with warnings"
+                "message": f"Validation completed in {mode} mode"
             }
             
         except Exception as e:
@@ -618,7 +624,6 @@ quality_gates:
                 "message": "Validation failed"
             }
     
-    @tool
     def aceflow_template(
         self,
         action: str,
@@ -635,21 +640,40 @@ quality_gates:
         """
         try:
             if action == "list":
+                result = self.template_manager.list_templates()
                 return {
                     "success": True,
                     "action": action,
                     "result": {
-                        "available_templates": [
-                            "minimal", "standard", "complete", "smart"
-                        ],
-                        "current_template": "standard"
+                        "available_templates": result["available"],
+                        "current_template": result["current"]
                     }
+                }
+            elif action == "apply":
+                if not template:
+                    return {
+                        "success": False,
+                        "error": "Template name is required for apply action",
+                        "message": "Please specify a template name"
+                    }
+                result = self.template_manager.apply_template(template)
+                return {
+                    "success": True,
+                    "action": action,
+                    "result": result
+                }
+            elif action == "validate":
+                result = self.template_manager.validate_current_template()
+                return {
+                    "success": True,
+                    "action": action,
+                    "result": result
                 }
             else:
                 return {
                     "success": False,
-                    "error": f"Action '{action}' not yet implemented",
-                    "message": "This tool is under development"
+                    "error": f"Invalid action '{action}'. Valid actions: list, apply, validate",
+                    "message": "Action not supported"
                 }
                 
         except Exception as e:

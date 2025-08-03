@@ -1,6 +1,5 @@
 """AceFlow MCP Prompts implementation."""
 
-from fastmcp.prompts import prompt
 from typing import Dict, Any, Optional
 import json
 from pathlib import Path
@@ -44,7 +43,6 @@ class AceFlowPrompts:
                 "flow": {"current_stage": "unknown", "progress_percentage": 0}
             }
     
-    @prompt
     def workflow_assistant(
         self,
         task: Optional[str] = None,
@@ -170,7 +168,6 @@ class AceFlowPrompts:
 
 请继续使用可用的工具来协助项目开发。"""
     
-    @prompt
     def stage_guide(self, stage: str) -> str:
         """Generate stage-specific guidance prompt."""
         try:
