@@ -38,7 +38,7 @@ except ImportError:
 class AceFlowTools:
     """AceFlow MCP Tools collection."""
     
-    def __init__(self):
+    def __init__(self, working_directory: Optional[str] = None):
         """Initialize tools with necessary dependencies."""
         self.platform_utils = PlatformUtils()
         self.file_ops = SafeFileOperations()
@@ -46,6 +46,12 @@ class AceFlowTools:
         self.project_manager = ProjectManager()
         self.workflow_engine = WorkflowEngine()
         self.template_manager = TemplateManager()
+        
+        # Set the working directory context
+        self.working_directory = working_directory or os.getcwd()
+        
+        # Debug logging
+        print(f"[DEBUG] AceFlowTools initialized with working_directory: {self.working_directory}", file=sys.stderr)
     
     def aceflow_init(
         self,
@@ -73,11 +79,21 @@ class AceFlowTools:
                     "message": "Mode validation failed"
                 }
             
-            # Determine target directory
+            # Determine target directory with intelligent working directory detection
             if directory:
                 target_dir = Path(directory).resolve()
             else:
-                target_dir = Path.cwd()
+                # Use the working directory passed during initialization
+                # This should be the correct client working directory
+                target_dir = Path(self.working_directory).resolve()
+                
+                # Debug logging for troubleshooting
+                print(f"[DEBUG] Working directory detection:", file=sys.stderr)
+                print(f"[DEBUG] Instance working_directory: {self.working_directory}", file=sys.stderr)
+                print(f"[DEBUG] PWD: {os.environ.get('PWD')}", file=sys.stderr)
+                print(f"[DEBUG] CLIENT_CWD: {os.environ.get('CLIENT_CWD')}", file=sys.stderr)
+                print(f"[DEBUG] os.getcwd(): {os.getcwd()}", file=sys.stderr)
+                print(f"[DEBUG] Selected target_dir: {target_dir}", file=sys.stderr)
             
             # Create directory if it doesn't exist
             target_dir.mkdir(parents=True, exist_ok=True)
@@ -94,7 +110,7 @@ class AceFlowTools:
                 return {
                     "success": False,
                     "error": "Directory already contains AceFlow configuration",
-                    "message": "Use --force flag to overwrite existing configuration"
+                    "message": f"Directory '{target_dir}' is already initialized. Use force=true to overwrite."
                 }
             
             # Initialize project structure
@@ -108,7 +124,13 @@ class AceFlowTools:
                         "name": project_name,
                         "mode": mode,
                         "directory": str(target_dir),
-                        "created_files": result.get("created_files", [])
+                        "created_files": result.get("created_files", []),
+                        "debug_info": {
+                            "detected_working_dir": str(target_dir),
+                            "original_cwd": os.getcwd(),
+                            "pwd_env": os.environ.get('PWD'),
+                            "cwd_env": os.environ.get('CWD')
+                        }
                     }
                 }
             else:
@@ -118,7 +140,12 @@ class AceFlowTools:
             return {
                 "success": False,
                 "error": str(e),
-                "message": "Failed to initialize project"
+                "message": "Failed to initialize project",
+                "debug_info": {
+                    "exception_type": type(e).__name__,
+                    "working_directory": os.getcwd(),
+                    "target_directory": str(target_dir) if 'target_dir' in locals() else "unknown"
+                }
             }
     
     def _initialize_project_structure(self, target_dir: Path, project_name: str, mode: str) -> Dict[str, Any]:

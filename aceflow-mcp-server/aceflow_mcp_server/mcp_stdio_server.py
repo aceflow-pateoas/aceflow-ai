@@ -68,7 +68,8 @@ class MCPStdioServer:
         
         # 创建输出适配器和工具实例
         self.output_adapter = MCPOutputAdapter()
-        self.tools_instance = AceFlowTools()
+        # 传递正确的工作目录给工具实例
+        self.tools_instance = AceFlowTools(working_directory=self.execution_context['workingDirectory'])
         self.prompt_generator = AceFlowPromptGenerator()
         
         # 创建MCP服务器实例
@@ -83,16 +84,54 @@ class MCPStdioServer:
             logger.debug(message)
     
     def get_execution_context(self) -> Dict[str, str]:
-        """智能检测执行上下文"""
+        """智能检测执行上下文和工作目录"""
         args = sys.argv
         command = args[2] if len(args) > 2 else ''
         is_mcp_mode = command == 'mcp-server' or 'mcp' in ' '.join(args)
         
+        # 获取真实的客户端工作目录
+        # 优先级: CLIENT_CWD > PWD > 环境变量检测 > 当前目录
+        client_working_dir = (
+            os.environ.get('CLIENT_CWD') or
+            os.environ.get('PWD') or
+            os.environ.get('INIT_CWD') or  # npm/npx设置的原始目录
+            os.environ.get('PROJECT_ROOT') or
+            self._detect_client_directory() or
+            os.getcwd()
+        )
+        
         return {
             'mode': 'MCP' if is_mcp_mode else 'CLI',
-            'workingDirectory': os.getcwd(),
+            'workingDirectory': client_working_dir,
             'originalCwd': os.getcwd()
         }
+    
+    def _detect_client_directory(self) -> Optional[str]:
+        """尝试检测客户端的真实工作目录"""
+        # 检查父进程信息
+        try:
+            import psutil
+            current_process = psutil.Process()
+            parent_process = current_process.parent()
+            
+            if parent_process:
+                # 如果父进程是VSCode、Cursor或其他编辑器
+                parent_name = parent_process.name().lower()
+                if any(editor in parent_name for editor in ['code', 'cursor', 'vscode', 'codebuddy']):
+                    # 尝试从父进程的工作目录获取
+                    return parent_process.cwd()
+        except ImportError:
+            # psutil不可用时的fallback
+            self.log("psutil not available, using environment variables only")
+        except Exception as e:
+            self.log(f"Error detecting client directory: {e}")
+        
+        # 检查环境变量中的项目相关目录
+        for env_var in ['VSCODE_CWD', 'PROJECT_CWD', 'WORKSPACE_FOLDER']:
+            if env_var in os.environ:
+                return os.environ[env_var]
+        
+        return None
     
     def setup_handlers(self):
         """设置MCP工具处理程序"""
