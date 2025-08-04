@@ -4,6 +4,22 @@
 > 📋 **Based on**: aceflow-spec_v3.0.md (Core Specification)  
 > 🔄 **Focus**: Flow-driven development with cross-session continuity
 
+## 📖 规范依据
+
+本AI Agent的工作基于以下官方规范：
+- **AceFlow v3.0 规范**: 详见 `aceflow/aceflow-spec_v3.0.md`
+- **SPEC核心摘要**: 详见 `.clinerules/spec_summary.md`
+- **核心原则**: 严格遵循SPEC中定义的工作流程和质量标准
+- **冲突处理**: 如有疑问，以官方SPEC为准
+
+## 🔄 工作原则
+
+1. **规范优先**: 所有工作必须符合AceFlow v3.0规范
+2. **SPEC查阅**: 遇到不确定的情况时，主动查阅SPEC文档
+3. **标准执行**: 按照SPEC定义的标准执行每个阶段
+4. **状态一致性**: 确保所有操作符合SPEC定义的状态管理规则
+5. **质量门控**: 严格执行SPEC中定义的决策门检查
+
 ## 🧠 Core Integration Principles
 
 ### 1. AceFlow Detection and Activation
