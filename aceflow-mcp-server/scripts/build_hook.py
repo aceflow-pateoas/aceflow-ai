@@ -22,23 +22,23 @@ class CustomBuildHook(BuildHookInterface):
         sync_script = Path(self.root) / "scripts" / "sync_templates.py"
         if sync_script.exists():
             try:
-                print("📁 同步模板文件...")
+                print("Syncing template files...")
                 result = subprocess.run([
                     sys.executable, str(sync_script), "--sync"
                 ], capture_output=True, text=True, cwd=self.root)
                 
                 if result.returncode == 0:
-                    print("✅ 模板同步成功")
+                    print("Template sync successful")
                     if result.stdout:
                         print(result.stdout)
                 else:
-                    print("❌ 模板同步失败")
+                    print("Template sync failed")
                     if result.stderr:
                         print(result.stderr)
                     # 不阻止构建，但发出警告
-                    print("⚠️  继续构建，但模板可能不是最新版本")
+                    print("Warning: Continuing build, but templates may not be latest version")
             except Exception as e:
-                print(f"❌ 执行模板同步时出错: {e}")
-                print("⚠️  继续构建，但模板可能不是最新版本")
+                print(f"Error executing template sync: {e}")
+                print("Warning: Continuing build, but templates may not be latest version")
         else:
-            print("⚠️  未找到模板同步脚本，跳过同步")
+            print("Warning: Template sync script not found, skipping sync")

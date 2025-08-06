@@ -37,7 +37,7 @@ class MCPStdioServer:
     
     def __init__(self):
         self.name = 'AceFlow'
-        self.version = '1.0.4'
+        self.version = '1.0.7'
         self.debug = os.getenv('MCP_DEBUG', 'false').lower() == 'true'
         
         # 设置调试日志级别

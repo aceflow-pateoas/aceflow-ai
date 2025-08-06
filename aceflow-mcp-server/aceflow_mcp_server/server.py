@@ -198,7 +198,7 @@ class AceFlowMCPServer:
 @click.option('--port', default=None, type=int, help='Port to bind to (for HTTP mode)')
 @click.option('--transport', default='stdio', help='Transport mode: stdio, sse, or streamable-http')
 @click.option('--log-level', default='INFO', help='Log level')
-@click.version_option(version="1.0.3")
+@click.version_option(version="1.1.0")
 def main(host: str, port: int, transport: str, log_level: str):
     """Start AceFlow MCP Server."""
     import os

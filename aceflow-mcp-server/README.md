@@ -1,6 +1,40 @@
-# AceFlow MCP Server
+# AceFlow MCP Server v1.1.0
 
-AI-driven workflow management through Model Context Protocol.
+🚀 **Enhanced AI-driven workflow management through Model Context Protocol**
+
+## ✨ What's New in v1.1.0
+
+### 🎯 **Enhanced .clinerules System**
+- **5 Comprehensive Prompt Files**: Complete AI Agent guidance system
+- **SPEC Integration**: Full integration with AceFlow v3.0 specification
+- **Project-Specific Configuration**: Tailored prompts for each project
+- **Quality Standards**: Comprehensive quality gate system (DG1-DG5)
+
+### 📋 **New .clinerules Files**
+1. **`system_prompt.md`** - Enhanced AI Agent identity and behavior rules
+2. **`aceflow_integration.md`** - Complete AceFlow integration guidelines  
+3. **`spec_summary.md`** - Quick reference to AceFlow v3.0 specification
+4. **`spec_query_helper.md`** - SPEC document query assistance
+5. **`quality_standards.md`** - Comprehensive quality standards
+
+## 🚀 Quick Start
+
+### Installation
+```bash
+pip install aceflow-mcp-server
+```
+
+### Basic Usage
+```python
+# Initialize a new AceFlow project
+aceflow_init(mode="standard", project_name="my-project")
+
+# Check project status
+aceflow_stage(action="status")
+
+# Validate project quality
+aceflow_validate(mode="detailed", report=True)
+```
 
 ## 📁 Project Structure
 
