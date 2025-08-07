@@ -50,6 +50,7 @@ Issues = "https://github.com/aceflow/aceflow-mcp-server/issues"
 
 [project.scripts]
 aceflow-mcp-server = "aceflow_mcp_server.server:main"
+aceflow-enhanced-server = "aceflow_mcp_server.enhanced_server:main"
 
 [tool.hatch.build.targets.wheel]
 packages = ["aceflow_mcp_server"]
