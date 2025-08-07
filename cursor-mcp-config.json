@@ -1,0 +1,27 @@
+{
+  "mcpServers": {
+    "aceflow-enhanced": {
+      "command": "aceflow-enhanced-server",
+      "args": [
+        "--host",
+        "localhost",
+        "--port",
+        "8000"
+      ],
+      "env": {
+        "ACEFLOW_LOG_LEVEL": "INFO",
+        "ACEFLOW_DEFAULT_MODE": "standard",
+        "ACEFLOW_AUTO_ADVANCE": "false",
+        "ACEFLOW_COLLABORATION_TIMEOUT": "600"
+      },
+      "disabled": false,
+      "autoApprove": [
+        "aceflow_stage_collaborative",
+        "aceflow_task_execute",
+        "aceflow_respond",
+        "aceflow_collaboration_status",
+        "aceflow_validate_quality"
+      ]
+    }
+  }
+}
