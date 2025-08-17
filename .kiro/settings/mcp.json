@@ -1,0 +1,23 @@
+{
+  "mcpServers": {
+    "aceflow": {
+      "command": "aceflow-mcp-server",
+      "args": [
+        "--mode",
+        "stdio",
+        "--log-level",
+        "WARNING"
+      ],
+      "env": {
+        "MCP_DEBUG": "false"
+      },
+      "disabled": false,
+      "autoApprove": [
+        "aceflow_init",
+        "aceflow_stage",
+        "aceflow_validate",
+        "aceflow_template"
+      ]
+    }
+  }
+}

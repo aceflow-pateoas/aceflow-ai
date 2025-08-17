@@ -36,7 +36,6 @@ venv.bak/
 *.swo
 
 # Project specific
-.kiro/
 .claude/
 .aceflow/
 **/.aceflow/
