@@ -1,0 +1,85 @@
+{
+  "total": 15,
+  "passed": 8,
+  "failed": 0,
+  "partial": 1,
+  "skipped": 6,
+  "success_rate": 60.0,
+  "results": [
+    {
+      "test": "aceflow_init - 基础项目初始化",
+      "status": "PARTIAL",
+      "message": "Tool aceflow_init works but missing fields: ['project_info']"
+    },
+    {
+      "test": "aceflow_stage - 基础阶段管理",
+      "status": "PASS",
+      "message": "Tool aceflow_stage is fully compatible"
+    },
+    {
+      "test": "aceflow_validate - 基础验证",
+      "status": "PASS",
+      "message": "Tool aceflow_validate is fully compatible"
+    },
+    {
+      "test": "aceflow_respond - 协作响应",
+      "status": "SKIP",
+      "message": "Collaboration module not enabled in current mode"
+    },
+    {
+      "test": "aceflow_collaboration_status - 协作状态",
+      "status": "SKIP",
+      "message": "Collaboration module not enabled in current mode"
+    },
+    {
+      "test": "aceflow_task_execute - 任务执行",
+      "status": "SKIP",
+      "message": "Collaboration module not enabled in current mode"
+    },
+    {
+      "test": "Resource project_state",
+      "status": "SKIP",
+      "message": "Resource verification method not available"
+    },
+    {
+      "test": "Resource workflow_config",
+      "status": "SKIP",
+      "message": "Resource verification method not available"
+    },
+    {
+      "test": "Resource stage_guide",
+      "status": "SKIP",
+      "message": "Resource verification method not available"
+    },
+    {
+      "test": "Configuration Modes",
+      "status": "PASS",
+      "message": "All configuration modes are supported"
+    },
+    {
+      "test": "String parameters",
+      "status": "PASS",
+      "message": "Parameter format is MCP compatible"
+    },
+    {
+      "test": "Boolean parameters",
+      "status": "PASS",
+      "message": "Parameter format is MCP compatible"
+    },
+    {
+      "test": "Numeric parameters",
+      "status": "PASS",
+      "message": "Parameter format is MCP compatible"
+    },
+    {
+      "test": "Array parameters",
+      "status": "PASS",
+      "message": "Parameter format is MCP compatible"
+    },
+    {
+      "test": "Object parameters",
+      "status": "PASS",
+      "message": "Parameter format is MCP compatible"
+    }
+  ]
+}

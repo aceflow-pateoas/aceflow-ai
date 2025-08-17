@@ -3,13 +3,10 @@
     "aceflow-enhanced": {
       "command": "aceflow-enhanced-server",
       "args": [
-        "--host",
-        "localhost",
-        "--port",
-        "8000"
+        "--log-level",
+        "INFO"
       ],
       "env": {
-        "ACEFLOW_LOG_LEVEL": "INFO",
         "ACEFLOW_DEFAULT_MODE": "standard",
         "ACEFLOW_AUTO_ADVANCE": "false",
         "ACEFLOW_COLLABORATION_TIMEOUT": "600"

@@ -1,0 +1,225 @@
+apiVersion: apps/v1
+kind: Deployment
+metadata:
+  name: aceflow-mcp-server
+  namespace: aceflow
+  labels:
+    app: aceflow-mcp-server
+    version: "2.0.0"
+spec:
+  replicas: 3
+  selector:
+    matchLabels:
+      app: aceflow-mcp-server
+  template:
+    metadata:
+      labels:
+        app: aceflow-mcp-server
+        version: "2.0.0"
+    spec:
+      serviceAccountName: aceflow-sa
+      containers:
+      - name: aceflow-mcp-server
+        image: aceflow/mcp-server:2.0.0
+        imagePullPolicy: IfNotPresent
+        ports:
+        - containerPort: 8080
+          name: http
+        - containerPort: 9090
+          name: metrics
+        env:
+        - name: ACEFLOW_MODE
+          value: "enhanced"
+        - name: ACEFLOW_LOG_LEVEL
+          value: "INFO"
+        - name: ACEFLOW_HOST
+          value: "0.0.0.0"
+        - name: ACEFLOW_PORT
+          value: "8080"
+        - name: ACEFLOW_COLLABORATION_ENABLED
+          value: "true"
+        - name: ACEFLOW_INTELLIGENCE_ENABLED
+          value: "true"
+        - name: ACEFLOW_MONITORING_ENABLED
+          value: "true"
+        envFrom:
+        - configMapRef:
+            name: aceflow-config
+        - secretRef:
+            name: aceflow-secrets
+        resources:
+          requests:
+            cpu: 100m
+            memory: 128Mi
+          limits:
+            cpu: 500m
+            memory: 512Mi
+        livenessProbe:
+          exec:
+            command:
+            - aceflow-unified
+            - test
+            - health
+          initialDelaySeconds: 30
+          periodSeconds: 30
+          timeoutSeconds: 10
+          failureThreshold: 3
+        readinessProbe:
+          exec:
+            command:
+            - aceflow-unified
+            - test
+            - health
+          initialDelaySeconds: 5
+          periodSeconds: 10
+          timeoutSeconds: 5
+          failureThreshold: 3
+        volumeMounts:
+        - name: config
+          mountPath: /app/config
+          readOnly: true
+        - name: data
+          mountPath: /app/data
+        - name: logs
+          mountPath: /app/logs
+      volumes:
+      - name: config
+        configMap:
+          name: aceflow-config-files
+      - name: data
+        persistentVolumeClaim:
+          claimName: aceflow-data
+      - name: logs
+        emptyDir: {}
+      restartPolicy: Always
+      terminationGracePeriodSeconds: 30
+
+---
+apiVersion: v1
+kind: Service
+metadata:
+  name: aceflow-mcp-server
+  namespace: aceflow
+  labels:
+    app: aceflow-mcp-server
+spec:
+  type: ClusterIP
+  ports:
+  - port: 8080
+    targetPort: 8080
+    protocol: TCP
+    name: http
+  - port: 9090
+    targetPort: 9090
+    protocol: TCP
+    name: metrics
+  selector:
+    app: aceflow-mcp-server
+
+---
+apiVersion: v1
+kind: ServiceAccount
+metadata:
+  name: aceflow-sa
+  namespace: aceflow
+
+---
+apiVersion: v1
+kind: ConfigMap
+metadata:
+  name: aceflow-config
+  namespace: aceflow
+data:
+  ACEFLOW_CACHE_TTL: "300"
+  ACEFLOW_MAX_CONCURRENT_REQUESTS: "100"
+  ACEFLOW_REQUEST_TIMEOUT: "30"
+  ACEFLOW_DATA_RETENTION_DAYS: "30"
+
+---
+apiVersion: v1
+kind: ConfigMap
+metadata:
+  name: aceflow-config-files
+  namespace: aceflow
+data:
+  aceflow-config.json: |
+    {
+      "version": "2.0",
+      "mode": "enhanced",
+      "core": {
+        "enabled": true,
+        "default_mode": "standard",
+        "auto_advance": false,
+        "quality_threshold": 0.8
+      },
+      "collaboration": {
+        "enabled": true,
+        "confirmation_timeout": 30,
+        "auto_confirm": false,
+        "interaction_level": "standard"
+      },
+      "intelligence": {
+        "enabled": true,
+        "intent_recognition": true,
+        "adaptive_guidance": true,
+        "learning_enabled": false
+      },
+      "monitoring": {
+        "enabled": true,
+        "usage_tracking": true,
+        "performance_tracking": true,
+        "data_retention_days": 30
+      }
+    }
+
+---
+apiVersion: v1
+kind: Secret
+metadata:
+  name: aceflow-secrets
+  namespace: aceflow
+type: Opaque
+data:
+  ACEFLOW_API_KEY: eW91ci1zZWNyZXQtYXBpLWtleS1oZXJl  # base64 encoded
+  ACEFLOW_ENCRYPTION_KEY: eW91ci1lbmNyeXB0aW9uLWtleS1oZXJl  # base64 encoded
+
+---
+apiVersion: v1
+kind: PersistentVolumeClaim
+metadata:
+  name: aceflow-data
+  namespace: aceflow
+spec:
+  accessModes:
+    - ReadWriteOnce
+  resources:
+    requests:
+      storage: 10Gi
+  storageClassName: standard
+
+---
+apiVersion: networking.k8s.io/v1
+kind: Ingress
+metadata:
+  name: aceflow-mcp-server
+  namespace: aceflow
+  annotations:
+    kubernetes.io/ingress.class: nginx
+    cert-manager.io/cluster-issuer: letsencrypt-prod
+    nginx.ingress.kubernetes.io/ssl-redirect: "true"
+spec:
+  tls:
+  - hosts:
+    - aceflow.yourdomain.com
+    secretName: aceflow-tls
+  rules:
+  - host: aceflow.yourdomain.com
+    http:
+      paths:
+      - path: /
+        pathType: Prefix
+        backend:
+          service:
+            name: aceflow-mcp-server
+            port:
+              number: 8080

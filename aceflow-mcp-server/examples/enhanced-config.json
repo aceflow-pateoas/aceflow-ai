@@ -1,0 +1,39 @@
+{
+  "version": "2.0",
+  "config_type": "aceflow_unified",
+  "mode": "enhanced",
+  "core": {
+    "enabled": true,
+    "default_mode": "standard",
+    "auto_advance": false,
+    "quality_threshold": 0.8
+  },
+  "collaboration": {
+    "enabled": true,
+    "confirmation_timeout": 30,
+    "auto_confirm": false,
+    "interaction_level": "standard"
+  },
+  "intelligence": {
+    "enabled": true,
+    "intent_recognition": true,
+    "adaptive_guidance": true,
+    "learning_enabled": false
+  },
+  "monitoring": {
+    "enabled": true,
+    "usage_tracking": true,
+    "performance_tracking": true,
+    "data_retention_days": 30
+  },
+  "performance_config": {
+    "cache_ttl": 600,
+    "max_concurrent_requests": 100,
+    "request_timeout": 30
+  },
+  "feature_flags": {
+    "caching": true,
+    "resource_routing": true,
+    "intelligent_recommendations": true
+  }
+}

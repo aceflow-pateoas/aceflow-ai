@@ -382,27 +382,16 @@ Please use this guidance to provide appropriate collaboration for the {stage_id}
 
 # CLI interface for enhanced server
 @click.command()
-@click.option("--host", default="localhost", help="Host to bind to")
-@click.option("--port", default=8000, type=int, help="Port to bind to")
 @click.option("--log-level", default="INFO", help="Log level")
-def main(host: str, port: int, log_level: str):
+def main(log_level: str):
     """Start the Enhanced AceFlow MCP Server with AI-Human Collaboration."""
-    print("🚀 Starting Enhanced AceFlow MCP Server with AI-Human Collaboration...")
-    print(f"   Host: {host}")
-    print(f"   Port: {port}")
-    print(f"   Log Level: {log_level}")
-    print()
-    print("🤝 Enhanced Features:")
-    print("   - Intelligent intent recognition")
-    print("   - Proactive collaboration requests")
-    print("   - Task-level collaborative execution")
-    print("   - Multi-level quality validation")
-    print("   - Adaptive workflow guidance")
-    print("   - Comprehensive state management")
-    print()
+    import logging
     
-    # Run the FastMCP server
-    mcp.run(host=host, port=port)
+    # Set up logging
+    logging.basicConfig(level=getattr(logging, log_level.upper()))
+    
+    # Run the FastMCP server via stdio (for MCP clients)
+    mcp.run()
 
 if __name__ == "__main__":
     main()

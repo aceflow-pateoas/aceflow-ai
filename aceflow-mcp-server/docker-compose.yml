@@ -1,0 +1,64 @@
+version: '3.8'
+
+services:
+  aceflow-unified:
+    build: .
+    container_name: aceflow-mcp-server
+    ports:
+      - "8080:8080"
+    environment:
+      - ACEFLOW_MODE=enhanced
+      - ACEFLOW_LOG_LEVEL=INFO
+      - ACEFLOW_COLLABORATION_ENABLED=true
+      - ACEFLOW_INTELLIGENCE_ENABLED=true
+      - ACEFLOW_MONITORING_ENABLED=true
+    volumes:
+      - ./config:/app/config:ro
+      - ./data:/app/data
+      - ./logs:/app/logs
+    restart: unless-stopped
+    healthcheck:
+      test: ["CMD", "aceflow-unified", "doctor"]
+      interval: 30s
+      timeout: 10s
+      retries: 3
+      start_period: 40s
+
+  # 可选：添加监控服务
+  prometheus:
+    image: prom/prometheus:latest
+    container_name: aceflow-prometheus
+    ports:
+      - "9090:9090"
+    volumes:
+      - ./monitoring/prometheus.yml:/etc/prometheus/prometheus.yml:ro
+    command:
+      - '--config.file=/etc/prometheus/prometheus.yml'
+      - '--storage.tsdb.path=/prometheus'
+      - '--web.console.libraries=/etc/prometheus/console_libraries'
+      - '--web.console.templates=/etc/prometheus/consoles'
+    restart: unless-stopped
+    profiles:
+      - monitoring
+
+  grafana:
+    image: grafana/grafana:latest
+    container_name: aceflow-grafana
+    ports:
+      - "3000:3000"
+    environment:
+      - GF_SECURITY_ADMIN_PASSWORD=admin
+    volumes:
+      - grafana-storage:/var/lib/grafana
+      - ./monitoring/grafana/dashboards:/etc/grafana/provisioning/dashboards:ro
+      - ./monitoring/grafana/datasources:/etc/grafana/provisioning/datasources:ro
+    restart: unless-stopped
+    profiles:
+      - monitoring
+
+volumes:
+  grafana-storage:
+
+networks:
+  default:
+    name: aceflow-network

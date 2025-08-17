@@ -1,0 +1,72 @@
+{
+  "version": "2.0",
+  "config_type": "aceflow_unified",
+  "unified_mode": true,
+  "mcpServers": {
+    "aceflow-server": {
+      "command": "uvx",
+      "args": [
+        "aceflow-mcp-server@latest"
+      ],
+      "env": {
+        "ACEFLOW_MODE": "basic",
+        "ENABLE_CACHING": "true"
+      }
+    },
+    "aceflow-enhanced-server": {
+      "command": "uvx",
+      "args": [
+        "aceflow-enhanced-mcp-server@latest"
+      ],
+      "env": {
+        "ENABLE_COLLABORATION": "true",
+        "ENABLE_INTELLIGENCE": "true",
+        "ENABLE_MONITORING": "true"
+      }
+    }
+  },
+  "module_config": {
+    "core": {
+      "enabled": true,
+      "tools": [
+        "aceflow_init",
+        "aceflow_stage",
+        "aceflow_validate"
+      ]
+    },
+    "collaboration": {
+      "enabled": true,
+      "tools": [
+        "aceflow_respond",
+        "aceflow_collaboration_status",
+        "aceflow_task_execute"
+      ]
+    },
+    "intelligence": {
+      "enabled": true,
+      "tools": [
+        "aceflow_intent_analyze",
+        "aceflow_recommend"
+      ]
+    }
+  },
+  "feature_flags": {
+    "caching": true,
+    "monitoring": true,
+    "resource_routing": true,
+    "intelligent_recommendations": false
+  },
+  "performance_config": {
+    "cache_ttl": 300,
+    "max_concurrent_requests": 100,
+    "request_timeout": 30
+  },
+  "migration_info": {
+    "migrated_at": "2025-08-12T10:26:31.887358",
+    "source_configs": [
+      "C:\\Users\\chenjing\\AppData\\Local\\Temp\\tmpir2vr39y\\aceflow-basic.json",
+      "C:\\Users\\chenjing\\AppData\\Local\\Temp\\tmpir2vr39y\\aceflow-enhanced.json"
+    ],
+    "migration_version": "1.0"
+  }
+}
