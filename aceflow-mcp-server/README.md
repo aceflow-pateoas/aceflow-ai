@@ -51,17 +51,19 @@ AceFlow MCP Server provides structured software development workflows through th
 ### Installation
 
 ```bash
-# Install via uvx (recommended)
+# Method 1: Install via uvx (recommended for end users)
 uvx aceflow-mcp-server
 
-# Or install traditionally
+# Method 2: Install via pip (traditional method)
 pip install aceflow-mcp-server
+
+# Method 3: Install with optional features
+pip install aceflow-mcp-server[performance,monitoring]
 ```
 
 ### MCP Client Configuration
 
-Add to your MCP client configuration:
-
+#### For uvx installation:
 ```json
 {
   "mcpServers": {
@@ -70,14 +72,22 @@ Add to your MCP client configuration:
       "args": ["aceflow-mcp-server@latest"],
       "env": {
         "ACEFLOW_LOG_LEVEL": "INFO"
-      },
-      "disabled": false,
-      "autoApprove": [
-        "aceflow_init",
-        "aceflow_stage", 
-        "aceflow_validate",
-        "aceflow_template"
-      ]
+      }
+    }
+  }
+}
+```
+
+#### For pip installation:
+```json
+{
+  "mcpServers": {
+    "aceflow": {
+      "command": "aceflow-mcp-server",
+      "args": [],
+      "env": {
+        "ACEFLOW_LOG_LEVEL": "INFO"
+      }
     }
   }
 }

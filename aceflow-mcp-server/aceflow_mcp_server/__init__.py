@@ -3,10 +3,14 @@
 AI-driven workflow management through Model Context Protocol.
 """
 
-__version__ = "1.0.2"
+__version__ = "2.0.4"
 __author__ = "AceFlow Team"
 __email__ = "team@aceflow.dev"
 
-from .server import AceFlowMCPServer
-
-__all__ = ["AceFlowMCPServer"]
+# Import only the essentials to avoid dependency issues
+try:
+    from .server import AceFlowMCPServer
+    __all__ = ["AceFlowMCPServer"]
+except ImportError:
+    # Fall back to core functionality only
+    __all__ = []
