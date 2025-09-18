@@ -1,0 +1,151 @@
+version: '3.8'
+
+services:
+  aceflow-mcp-server:
+    build:
+      context: ..
+      dockerfile: docker/Dockerfile
+    image: aceflow/mcp-server:2.1.0
+    container_name: aceflow-mcp-server
+    ports:
+      - "8000:8000"
+    environment:
+      # 传输配置
+      - ACEFLOW_TRANSPORT=streamable-http
+      - ACEFLOW_HOST=0.0.0.0
+      - ACEFLOW_PORT=8000
+      
+      # 日志配置
+      - ACEFLOW_LOG_LEVEL=INFO
+      - ACEFLOW_DEBUG=false
+      
+      # 工作目录配置
+      - ACEFLOW_WORKING_DIRECTORY=/app/workspace
+      
+      # 性能配置
+      - ACEFLOW_MAX_CONNECTIONS=100
+      - ACEFLOW_REQUEST_TIMEOUT=30
+      - ACEFLOW_KEEPALIVE_TIMEOUT=60
+      
+      # CORS配置
+      - ACEFLOW_ALLOWED_ORIGINS=*
+      
+    volumes:
+      # 工作空间挂载
+      - workspace:/app/workspace
+      # 配置文件挂载
+      - ./config:/app/config:ro
+      # 日志目录挂载
+      - logs:/app/logs
+    
+    networks:
+      - aceflow-network
+    
+    restart: unless-stopped
+    
+    healthcheck:
+      test: ["CMD", "curl", "-f", "http://localhost:8000/health"]
+      interval: 30s
+      timeout: 10s
+      retries: 3
+      start_period: 30s
+    
+    # 资源限制
+    deploy:
+      resources:
+        limits:
+          memory: 512M
+          cpus: '1.0'
+        reservations:
+          memory: 256M
+          cpus: '0.5'
+
+  # Nginx反向代理（可选）
+  nginx:
+    image: nginx:alpine
+    container_name: aceflow-nginx
+    ports:
+      - "80:80"
+      - "443:443"
+    volumes:
+      - ./nginx/nginx.conf:/etc/nginx/nginx.conf:ro
+      - ./nginx/ssl:/etc/nginx/ssl:ro
+    networks:
+      - aceflow-network
+    depends_on:
+      - aceflow-mcp-server
+    restart: unless-stopped
+    profiles:
+      - with-nginx
+
+  # Redis缓存（可选，用于会话管理）
+  redis:
+    image: redis:7-alpine
+    container_name: aceflow-redis
+    ports:
+      - "6379:6379"
+    volumes:
+      - redis-data:/data
+    networks:
+      - aceflow-network
+    restart: unless-stopped
+    profiles:
+      - with-redis
+
+  # Prometheus监控（可选）
+  prometheus:
+    image: prom/prometheus:latest
+    container_name: aceflow-prometheus
+    ports:
+      - "9090:9090"
+    volumes:
+      - ./monitoring/prometheus.yml:/etc/prometheus/prometheus.yml:ro
+      - prometheus-data:/prometheus
+    networks:
+      - aceflow-network
+    restart: unless-stopped
+    profiles:
+      - with-monitoring
+
+  # Grafana仪表板（可选）
+  grafana:
+    image: grafana/grafana:latest
+    container_name: aceflow-grafana
+    ports:
+      - "3000:3000"
+    volumes:
+      - grafana-data:/var/lib/grafana
+      - ./monitoring/grafana:/etc/grafana/provisioning:ro
+    environment:
+      - GF_SECURITY_ADMIN_PASSWORD=aceflow123
+    networks:
+      - aceflow-network
+    depends_on:
+      - prometheus
+    restart: unless-stopped
+    profiles:
+      - with-monitoring
+
+networks:
+  aceflow-network:
+    driver: bridge
+    name: aceflow-network
+
+volumes:
+  workspace:
+    name: aceflow-workspace
+  logs:
+    name: aceflow-logs
+  redis-data:
+    name: aceflow-redis-data
+  prometheus-data:
+    name: aceflow-prometheus-data
+  grafana-data:
+    name: aceflow-grafana-data
+
+# 使用示例:
+# 基本运行: docker-compose up -d
+# 包含Nginx: docker-compose --profile with-nginx up -d
+# 包含Redis: docker-compose --profile with-redis up -d
+# 包含监控: docker-compose --profile with-monitoring up -d
+# 完整部署: docker-compose --profile with-nginx --profile with-redis --profile with-monitoring up -d

@@ -90,21 +90,75 @@ class MCPStdioServer:
         is_mcp_mode = command == 'mcp-server' or 'mcp' in ' '.join(args)
         
         # 获取真实的客户端工作目录
-        # 优先级: CLIENT_CWD > PWD > 环境变量检测 > 当前目录
+        # 优先级: 命令行传递 > MCP客户端环境变量 > 项目检测 > 当前目录
         client_working_dir = (
-            os.environ.get('CLIENT_CWD') or
-            os.environ.get('PWD') or
-            os.environ.get('INIT_CWD') or  # npm/npx设置的原始目录
-            os.environ.get('PROJECT_ROOT') or
-            self._detect_client_directory() or
-            os.getcwd()
+            self._get_client_directory_from_args() or
+            os.environ.get('MCP_CWD') or           # MCP协议标准环境变量
+            os.environ.get('CLIENT_CWD') or        # 客户端工作目录
+            os.environ.get('VSCODE_CWD') or        # VS Code工作目录
+            os.environ.get('CURSOR_CWD') or        # Cursor编辑器工作目录
+            os.environ.get('PWD') or               # Unix风格当前目录
+            os.environ.get('INIT_CWD') or          # npm/npx设置的原始目录
+            os.environ.get('PROJECT_ROOT') or      # 项目根目录
+            self._detect_client_directory() or     # 智能检测
+            self._find_project_root() or           # 向上查找项目根目录
+            os.getcwd()                           # 最后的后备选项
         )
+        
+        # 验证目录的有效性
+        if not os.path.exists(client_working_dir):
+            self.log(f"⚠️ 检测到的工作目录不存在: {client_working_dir}")
+            client_working_dir = os.getcwd()
         
         return {
             'mode': 'MCP' if is_mcp_mode else 'CLI',
             'workingDirectory': client_working_dir,
             'originalCwd': os.getcwd()
         }
+    
+    def _get_client_directory_from_args(self) -> Optional[str]:
+        """从命令行参数中获取客户端工作目录"""
+        args = sys.argv
+        for i, arg in enumerate(args):
+            if arg in ['--cwd', '--working-directory'] and i + 1 < len(args):
+                return args[i + 1]
+            if arg.startswith('--cwd='):
+                return arg.split('=', 1)[1]
+            if arg.startswith('--working-directory='):
+                return arg.split('=', 1)[1]
+        return None
+    
+    def _find_project_root(self) -> Optional[str]:
+        """向上查找项目根目录"""
+        current = os.getcwd()
+        path = os.path.abspath(current)
+        
+        # 避免在IDE安装目录中查找
+        if any(pattern in path for pattern in ['Microsoft VS Code', 'Code.exe', 'vscode', 'cursor']):
+            return None
+            
+        project_indicators = [
+            '.git', '.hg', '.svn',          # 版本控制
+            'package.json', 'pyproject.toml', 'requirements.txt',  # 配置文件
+            'Cargo.toml', 'pom.xml', 'build.gradle',              # 其他语言
+            'tsconfig.json', 'webpack.config.js',                 # 前端
+            'Gemfile', 'composer.json',                           # Ruby, PHP
+            'README.md', 'README.rst', 'README.txt'               # 文档
+        ]
+        
+        # 最多向上查找5层
+        for _ in range(5):
+            for indicator in project_indicators:
+                if os.path.exists(os.path.join(path, indicator)):
+                    self.log(f"🎯 在 {path} 找到项目指示器: {indicator}")
+                    return path
+                    
+            parent = os.path.dirname(path)
+            if parent == path:  # 到达根目录
+                break
+            path = parent
+            
+        return None
     
     def _detect_client_directory(self) -> Optional[str]:
         """尝试检测客户端的真实工作目录"""

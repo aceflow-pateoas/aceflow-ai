@@ -4,8 +4,8 @@ build-backend = "setuptools.build_meta"
 
 [project]
 name = "aceflow-mcp-server"
-version = "2.0.4"
-description = "AceFlow MCP Server - AI-协作增强版，支持双向AI-MCP数据交换的智能开发工作流服务器"
+version = "2.2.0"
+description = "AceFlow MCP Server - AI-协作增强版，支持双向AI-MCP数据交换的智能开发工作流服务器，支持HTTP和stdio传输模式"
 readme = "README.md"
 license = {text = "MIT"}
 authors = [
@@ -44,6 +44,9 @@ dependencies = [
     "python-dotenv>=1.0.0",
     "jinja2>=3.0.0",
     "pyyaml>=6.0.0",
+    "fastapi>=0.104.0",
+    "uvicorn[standard]>=0.24.0",
+    "starlette>=0.27.0",
 ]
 
 [project.optional-dependencies]
@@ -75,6 +78,8 @@ Issues = "https://github.com/aceflow-pateoas/aceflow-ai/issues"
 
 [project.scripts]
 aceflow-mcp-server = "aceflow_mcp_server.mcp_stdio_server:main"
+aceflow-mcp-http = "aceflow_mcp_server.mcp_http_server:MCPHTTPServer"
+aceflow-mcp-unified = "aceflow_mcp_server.unified_server:main"
 
 [tool.setuptools]
 include-package-data = true
