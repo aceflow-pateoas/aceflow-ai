@@ -2,7 +2,7 @@
 
 ## 📋 概览
 
-AceFlow MCP Server v2.1.0 现在完全支持MCP 2025 Streamable HTTP协议，可以通过HTTP方式部署和访问，同时保持对传统stdio模式的完全兼容。
+AceFlow MCP Server v2.2.0 现在完全支持MCP 2025 HTTP协议（支持同步和流式两种模式），可以通过HTTP方式部署和访问，同时保持对传统stdio模式的完全兼容。
 
 ## 🚀 快速开始
 
@@ -10,7 +10,7 @@ AceFlow MCP Server v2.1.0 现在完全支持MCP 2025 Streamable HTTP协议，可
 
 ```bash
 # 安装最新版本
-pip install aceflow-mcp-server==2.1.0
+pip install aceflow-mcp-server==2.2.0
 
 # HTTP模式启动
 aceflow-mcp-unified --transport streamable-http --host 0.0.0.0 --port 8000
@@ -23,7 +23,7 @@ aceflow-mcp-unified --transport auto
 
 ```bash
 # 拉取镜像并运行
-docker run -d -p 8000:8000 --name aceflow-mcp aceflow/mcp-server:2.1.0
+docker run -d -p 8000:8000 --name aceflow-mcp aceflow/mcp-server:2.2.0
 
 # 使用docker-compose部署
 git clone https://github.com/aceflow-pateoas/aceflow-ai.git
@@ -47,22 +47,23 @@ cd aceflow-ai/aceflow-mcp-server
 
 ## 🌐 HTTP模式特性
 
-### MCP 2025 Streamable HTTP协议支持
+### MCP 2025 HTTP协议支持
 
+**v2.2.0新增：同步响应模式**
+- ✅ **同步响应**: POST请求直接返回完整JSON-RPC响应（推荐）
 - ✅ **单一端点**: `/mcp` 支持POST和GET请求
-- ✅ **双向通信**: 客户端请求 + 服务器流式响应
-- ✅ **Server-Sent Events**: 实时流式传输
-- ✅ **断线重连**: 支持Last-Event-ID恢复机制
+- ✅ **Server-Sent Events**: 可选的流式传输支持（GET端点）
+- ✅ **会话管理**: 智能会话隔离和清理（X-Session-ID）
 - ✅ **多客户端**: 并发连接支持
-- ✅ **会话管理**: 智能会话隔离和清理
+- ✅ **断线重连**: 支持Last-Event-ID恢复机制（流式模式）
 
 ### 核心端点
 
 | 端点 | 方法 | 描述 | 用途 |
 |------|------|------|------|
 | `/health` | GET | 健康检查 | 监控和负载均衡 |
-| `/mcp` | POST | 发送MCP消息 | 客户端到服务器通信 |
-| `/mcp` | GET | 接收SSE流 | 服务器到客户端通信 |
+| `/mcp` | POST | 发送MCP消息并获取同步响应 | 标准MCP通信（推荐） |
+| `/mcp` | GET | 接收SSE流 | 可选的流式通信 |
 
 ## ⚙️ 配置选项
 

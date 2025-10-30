@@ -99,35 +99,33 @@ class MCPHTTPServer:
         
         @self.app.post("/mcp")
         async def mcp_post(request: Request):
-            """MCP POST端点 - 客户端到服务器消息"""
+            """MCP POST端点 - 同步模式，直接返回JSON-RPC响应"""
+            # 解析JSON-RPC消息
             try:
-                # 获取会话ID
-                session_id = await self._get_or_create_session(request)
-                
-                # 解析JSON-RPC消息
                 message = await request.json()
-                logger.debug(f"📨 收到MCP消息，会话ID: {session_id}, 消息: {json.dumps(message)}")
-                
-                # 验证JSON-RPC格式
-                if not self._validate_jsonrpc_message(message):
-                    raise HTTPException(status_code=400, detail="Invalid JSON-RPC message")
-                
-                # 处理消息
-                response = await self._process_mcp_message(session_id, message)
-                
-                # 将响应加入会话队列
-                await self._queue_response(session_id, response)
-                
-                # 返回HTTP 202 Accepted
-                return JSONResponse(
-                    status_code=202,
-                    content={"accepted": True, "session_id": session_id}
-                )
-                
             except json.JSONDecodeError:
                 raise HTTPException(status_code=400, detail="Invalid JSON")
+
+            # 验证JSON-RPC格式（在创建会话之前验证）
+            if not self._validate_jsonrpc_message(message):
+                raise HTTPException(status_code=400, detail="Invalid JSON-RPC message")
+
+            # 获取会话ID（用于日志和会话管理）
+            session_id = await self._get_or_create_session(request)
+            logger.debug(f"📨 收到MCP消息，会话ID: {session_id}, 消息: {json.dumps(message)}")
+
+            # 处理消息并直接返回响应（同步模式）
+            try:
+                response = await self._process_mcp_message(session_id, message)
+
+                # 直接返回JSON-RPC响应
+                return JSONResponse(
+                    status_code=200,
+                    content=response,
+                    headers={"X-Session-ID": session_id}
+                )
             except Exception as e:
-                logger.error(f"❌ MCP POST处理错误: {e}")
+                logger.error(f"❌ MCP消息处理错误: {e}")
                 raise HTTPException(status_code=500, detail=f"Server error: {str(e)}")
     
     async def _get_or_create_session(self, request: Request) -> str:
@@ -407,10 +405,10 @@ class MCPHTTPServer:
         logger.info(f"🚀 启动AceFlow MCP HTTP服务器")
         logger.info(f"📍 监听地址: {self.config.host}:{self.config.port}")
         logger.info(f"🔧 工作目录: {self.config.get_work_dir()}")
-        
-        # 启动后台任务
-        asyncio.create_task(self.start_background_tasks())
-        
+
+        # uvicorn.run will create its own event loop, so we don't need to create tasks here
+        # The background cleanup will be started via lifespan events if needed
+
         # 启动服务器
         uvicorn.run(
             self.app,
@@ -422,3 +420,33 @@ class MCPHTTPServer:
             ssl_certfile=self.config.cert_file,
             timeout_keep_alive=self.config.keepalive_timeout,
         )
+
+
+def main():
+    """主函数入口"""
+    # 设置日志
+    logging.basicConfig(
+        level=logging.INFO,
+        format='%(asctime)s - %(name)s - %(levelname)s - %(message)s'
+    )
+
+    # 创建服务器
+    server = MCPHTTPServer()
+
+    # 输出配置信息用于调试
+    logger.info("=" * 60)
+    logger.info("服务器配置信息:")
+    logger.info(f"  Host: {server.config.host}")
+    logger.info(f"  Port: {server.config.port}")
+    logger.info(f"  Transport: {server.config.transport}")
+    logger.info(f"  Working Dir: {server.config.get_work_dir()}")
+    logger.info(f"  Debug: {server.config.debug}")
+    logger.info(f"  Log Level: {server.config.log_level}")
+    logger.info("=" * 60)
+
+    # 运行服务器
+    server.run()
+
+
+if __name__ == "__main__":
+    main()

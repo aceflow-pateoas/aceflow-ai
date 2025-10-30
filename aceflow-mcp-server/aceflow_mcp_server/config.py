@@ -15,7 +15,7 @@ class ServerConfig:
     
     # 传输层配置
     transport: str = "auto"  # stdio, http, streamable-http, auto
-    host: str = "localhost"
+    host: str = "0.0.0.0"  # 监听所有接口
     port: int = 8000
     
     # HTTP特定配置
@@ -49,7 +49,7 @@ class ServerConfig:
         """从环境变量创建配置"""
         return cls(
             transport=os.getenv('ACEFLOW_TRANSPORT', 'auto'),
-            host=os.getenv('ACEFLOW_HOST', 'localhost'),
+            host=os.getenv('ACEFLOW_HOST', '0.0.0.0'),  # 默认监听所有接口
             port=int(os.getenv('ACEFLOW_PORT', '8000')),
             
             enable_https=os.getenv('ACEFLOW_ENABLE_HTTPS', 'false').lower() == 'true',
