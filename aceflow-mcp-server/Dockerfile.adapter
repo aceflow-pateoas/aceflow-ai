@@ -1,0 +1,36 @@
+# AceFlow LLM Adapter Dockerfile
+# 私有大模型适配器服务
+
+FROM python:3.11-slim
+
+LABEL maintainer="AceFlow Team <team@aceflow.dev>"
+LABEL version="2.2.0"
+LABEL description="LLM Adapter for AceFlow MCP Server"
+
+WORKDIR /app
+
+# 安装依赖
+RUN pip install --no-cache-dir \
+    fastapi==0.104.1 \
+    uvicorn[standard]==0.24.0 \
+    requests==2.31.0 \
+    pydantic==2.5.0
+
+# 复制适配器代码
+COPY docs/private_llm_adapter.py ./adapter.py
+
+# 环境变量
+ENV MCP_SERVER_URL=http://localhost:8000 \
+    ADAPTER_HOST=0.0.0.0 \
+    ADAPTER_PORT=9000
+
+# 暴露端口
+EXPOSE 9000
+
+# 启动适配器服务
+CMD ["python", "-c", "\
+from adapter import create_adapter_api; \
+import uvicorn; \
+app = create_adapter_api(); \
+uvicorn.run(app, host='${ADAPTER_HOST}', port=${ADAPTER_PORT})\
+"]

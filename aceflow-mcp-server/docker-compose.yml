@@ -1,0 +1,104 @@
+version: '3.8'
+
+services:
+  # AceFlow MCP Server - 主服务
+  aceflow-mcp:
+    build:
+      context: .
+      dockerfile: Dockerfile
+    image: aceflow-mcp-server:2.2.0
+    container_name: aceflow-mcp
+    ports:
+      - "8000:8000"  # 主服务端口
+    volumes:
+      # 工作目录挂载 - 用于项目文件持久化
+      - ./workspace:/workspace
+      # 日志目录挂载（可选）
+      - ./logs:/logs
+    environment:
+      # 服务器配置
+      - ACEFLOW_HOST=0.0.0.0
+      - ACEFLOW_PORT=8000
+      - ACEFLOW_TRANSPORT=streamable-http
+
+      # 日志配置
+      - ACEFLOW_LOG_LEVEL=INFO
+      - ACEFLOW_DEBUG=false
+
+      # 性能配置
+      - ACEFLOW_MAX_CONNECTIONS=100
+      - ACEFLOW_REQUEST_TIMEOUT=30
+      - ACEFLOW_KEEPALIVE_TIMEOUT=60
+
+      # 可选: SSL 配置（如需 HTTPS）
+      # - ACEFLOW_CERT_FILE=/certs/server.crt
+      # - ACEFLOW_KEY_FILE=/certs/server.key
+
+    # 健康检查
+    healthcheck:
+      test: ["CMD", "curl", "-f", "http://localhost:8000/health"]
+      interval: 30s
+      timeout: 5s
+      retries: 3
+      start_period: 10s
+
+    # 重启策略
+    restart: unless-stopped
+
+    # 资源限制
+    deploy:
+      resources:
+        limits:
+          cpus: '2.0'
+          memory: 2G
+        reservations:
+          cpus: '0.5'
+          memory: 512M
+
+    # 网络配置
+    networks:
+      - internal-network
+
+    # 日志配置
+    logging:
+      driver: "json-file"
+      options:
+        max-size: "10m"
+        max-file: "3"
+
+  # 可选: 私有大模型适配器服务
+  llm-adapter:
+    build:
+      context: .
+      dockerfile: Dockerfile.adapter
+    image: aceflow-llm-adapter:2.2.0
+    container_name: aceflow-adapter
+    ports:
+      - "9000:9000"  # 适配器端口
+    environment:
+      - MCP_SERVER_URL=http://aceflow-mcp:8000
+      - ADAPTER_HOST=0.0.0.0
+      - ADAPTER_PORT=9000
+    depends_on:
+      aceflow-mcp:
+        condition: service_healthy
+    restart: unless-stopped
+    networks:
+      - internal-network
+    profiles:
+      - with-adapter  # 可选服务，使用 --profile with-adapter 启用
+
+# 网络配置
+networks:
+  internal-network:
+    driver: bridge
+    ipam:
+      config:
+        - subnet: 172.20.0.0/16
+
+# 数据卷配置
+volumes:
+  workspace:
+    driver: local
+  logs:
+    driver: local
