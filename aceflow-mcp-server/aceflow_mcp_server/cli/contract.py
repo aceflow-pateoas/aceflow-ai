@@ -16,6 +16,7 @@ from ..contract.generator import ContractGenerator
 from ..contract.filter import ContractFilter
 from ..contract.completion import SmartCompletion
 from ..contract.repo import ContractRepo
+from ..notification.email import EmailNotifier
 
 
 console = Console()
@@ -319,6 +320,37 @@ def push_contract(feature: str, message: Optional[str], branch: str):
 
         if success:
             console.print(f"[bold green]✅ {result_message}[/bold green]\n")
+
+            # Send email notification
+            smtp_config = config.smtp_config
+            if smtp_config:
+                try:
+                    # Get dev team emails
+                    dev_team = feature_config.get('dev_team', [])
+
+                    # For MVP, assume dev_team contains email addresses
+                    # In production, you might need to map usernames to emails
+                    recipients = [member for member in dev_team if '@' in member]
+
+                    if recipients:
+                        notifier = EmailNotifier(smtp_config)
+
+                        # Extract commit hash from result message if present
+                        commit_hash = None
+                        if '(' in result_message and ')' in result_message:
+                            commit_hash = result_message.split('(')[-1].split(')')[0]
+
+                        notifier.send_contract_update_notification(
+                            feature_name=feature,
+                            contract_url=repo_url,
+                            recipients=recipients,
+                            commit_hash=commit_hash,
+                            dev_team=dev_team,
+                            custom_message=message
+                        )
+                except Exception as e:
+                    console.print(f"[yellow]⚠️  邮件通知失败: {e}[/yellow]")
+                    console.print("[yellow]契约已推送成功，但邮件通知未发送[/yellow]\n")
 
             # Display next steps
             console.print("[bold]下一步:[/bold]")
