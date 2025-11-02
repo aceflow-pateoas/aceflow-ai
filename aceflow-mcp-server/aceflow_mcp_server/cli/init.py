@@ -60,6 +60,8 @@ def init(
             return
 
     # Interactive mode
+    smtp_password = ""  # Initialize
+
     if not non_interactive:
         console.print("[bold]请输入项目配置:[/bold]\n")
 

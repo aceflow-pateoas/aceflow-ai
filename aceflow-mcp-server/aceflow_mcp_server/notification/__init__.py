@@ -8,10 +8,8 @@ This module provides functionality for:
 - Message formatting
 """
 
-from .email import EmailNotifier
-from .template import NotificationTemplate
+# Import modules when they are implemented
+# from .email import EmailNotifier
+# from .template import NotificationTemplate
 
-__all__ = [
-    "EmailNotifier",
-    "NotificationTemplate",
-]
+__all__ = []
