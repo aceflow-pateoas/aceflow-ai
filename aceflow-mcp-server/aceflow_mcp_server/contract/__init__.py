@@ -12,6 +12,6 @@ from .generator import ContractGenerator
 from .filter import ContractFilter
 from .completion import SmartCompletion
 from .config import ContractConfig
-# from .repo import ContractRepo  # Will be implemented later
+from .repo import ContractRepo
 
-__all__ = ['ContractGenerator', 'ContractFilter', 'SmartCompletion', 'ContractConfig']
+__all__ = ['ContractGenerator', 'ContractFilter', 'SmartCompletion', 'ContractConfig', 'ContractRepo']
