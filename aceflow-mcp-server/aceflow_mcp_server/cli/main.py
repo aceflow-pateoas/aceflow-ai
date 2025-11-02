@@ -6,6 +6,7 @@ import click
 from rich.console import Console
 
 from .init import init
+from .feature import feature_group
 
 
 console = Console()
@@ -24,6 +25,7 @@ def cli():
 
 # Register commands
 cli.add_command(init)
+cli.add_command(feature_group)
 
 
 def main():

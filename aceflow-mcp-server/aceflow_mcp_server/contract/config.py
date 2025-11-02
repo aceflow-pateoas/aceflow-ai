@@ -119,6 +119,15 @@ class ContractConfig:
             self._config['aceflow']['features'] = {}
         self._config['aceflow']['features'][feature_name] = config
 
+    def get_features(self) -> Dict[str, Any]:
+        """
+        Get all feature configurations.
+
+        Returns:
+            Dictionary of all features
+        """
+        return self._config.get('aceflow', {}).get('features', {})
+
     def list_features(self) -> List[str]:
         """
         List all configured features.
@@ -127,6 +136,17 @@ class ContractConfig:
             List of feature names
         """
         return list(self._config.get('aceflow', {}).get('features', {}).keys())
+
+    def remove_feature(self, feature_name: str) -> None:
+        """
+        Remove a feature configuration.
+
+        Args:
+            feature_name: Feature name to remove
+        """
+        features = self._config.get('aceflow', {}).get('features', {})
+        if feature_name in features:
+            del features[feature_name]
 
     @property
     def smtp_config(self) -> Optional[Dict[str, Any]]:
