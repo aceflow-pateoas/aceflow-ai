@@ -1,8 +1,0 @@
-#!/home/chenjing/AI/aceflow-ai/aceflow-mcp-server/test_contract_env/bin/python3
-# -*- coding: utf-8 -*-
-import re
-import sys
-from aceflow_mcp_server.mcp_http_server import MCPHTTPServer
-if __name__ == '__main__':
-    sys.argv[0] = re.sub(r'(-script\.pyw|\.exe)?$', '', sys.argv[0])
-    sys.exit(MCPHTTPServer())
