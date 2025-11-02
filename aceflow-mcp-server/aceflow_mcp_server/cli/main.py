@@ -7,6 +7,7 @@ from rich.console import Console
 
 from .init import init
 from .feature import feature_group
+from .contract import contract_group
 
 
 console = Console()
@@ -26,6 +27,7 @@ def cli():
 # Register commands
 cli.add_command(init)
 cli.add_command(feature_group)
+cli.add_command(contract_group)
 
 
 def main():
