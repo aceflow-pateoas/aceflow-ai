@@ -47,6 +47,7 @@ dependencies = [
     "fastapi>=0.104.0",
     "uvicorn[standard]>=0.24.0",
     "starlette>=0.27.0",
+    "requests>=2.28.0",
 ]
 
 [project.optional-dependencies]
@@ -80,6 +81,7 @@ Issues = "https://github.com/aceflow-pateoas/aceflow-ai/issues"
 aceflow-mcp-server = "aceflow_mcp_server.mcp_stdio_server:main"
 aceflow-mcp-http = "aceflow_mcp_server.mcp_http_server:MCPHTTPServer"
 aceflow-mcp-unified = "aceflow_mcp_server.unified_server:main"
+aceflow = "aceflow_mcp_server.cli.main:main"
 
 [tool.setuptools]
 include-package-data = true
