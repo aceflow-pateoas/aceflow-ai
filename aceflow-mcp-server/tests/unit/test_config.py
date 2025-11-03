@@ -43,12 +43,15 @@ class TestContractConfig:
                     "base_path": "contracts/active"
                 },
                 "notification": {
-                    "smtp": {
-                        "host": "smtp.example.com",
-                        "port": 587,
-                        "user": "test@example.com",
-                        "password": "${SMTP_PASSWORD}",
-                        "from_email": "aceflow@example.com"
+                    "email": {
+                        "enabled": True,
+                        "smtp": {
+                            "host": "smtp.example.com",
+                            "port": 587,
+                            "user": "test@example.com",
+                            "password": "${SMTP_PASSWORD}",
+                            "from": "aceflow@example.com"
+                        }
                     }
                 }
             }
@@ -60,7 +63,7 @@ class TestContractConfig:
         with open(config_file, 'w') as f:
             yaml.dump(config_data, f)
 
-        return temp_dir
+        return config_file  # Return config file path, not directory
 
     def test_load_config(self, sample_config):
         """Test loading configuration from file"""
@@ -130,11 +133,10 @@ class TestContractConfig:
         """Test contract repository configuration"""
         config = ContractConfig(sample_config)
 
-        repo_config = config.contract_repo_config
-
-        assert repo_config["url"] == "git@github.com:test/contracts.git"
-        assert repo_config["branch"] == "main"
-        assert repo_config["base_path"] == "contracts/active"
+        # Test individual properties (no single contract_repo_config property)
+        assert config.contract_repo_url == "git@github.com:test/contracts.git"
+        assert config.contract_repo_branch == "main"
+        assert config.contract_repo_base_path == "contracts/active"
 
     def test_smtp_config(self, sample_config):
         """Test SMTP configuration"""
@@ -142,10 +144,12 @@ class TestContractConfig:
 
         smtp = config.smtp_config
 
+        assert smtp is not None
         assert smtp["host"] == "smtp.example.com"
         assert smtp["port"] == 587
         assert smtp["user"] == "test@example.com"
         assert smtp["password"] == "${SMTP_PASSWORD}"
+        assert smtp["from"] == "aceflow@example.com"
 
     def test_save_config(self, temp_dir):
         """Test saving configuration"""
@@ -157,7 +161,7 @@ class TestContractConfig:
         with open(config_file, 'w') as f:
             yaml.dump(initial_data, f)
 
-        config = ContractConfig(temp_dir)
+        config = ContractConfig(config_file)
 
         # Add feature
         new_feature = {
@@ -167,17 +171,20 @@ class TestContractConfig:
             "enabled": True
         }
         config.add_feature("test", new_feature)
+        config.save()  # Save to disk
 
         # Reload and verify
-        config2 = ContractConfig(temp_dir)
+        config2 = ContractConfig(config_file)
         feature = config2.get_feature("test")
         assert feature is not None
         assert feature["description"] == "Test"
 
     def test_missing_config_file(self, temp_dir):
         """Test handling missing config file"""
-        with pytest.raises(FileNotFoundError):
-            ContractConfig(temp_dir)
+        nonexistent = temp_dir / ".aceflow" / "nonexistent.yaml"
+        config = ContractConfig(nonexistent)
+        # Should not raise error, just creates empty config
+        assert config._config == {}
 
     def test_get_completion_rules(self, sample_config):
         """Test getting smart completion rules"""

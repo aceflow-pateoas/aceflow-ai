@@ -72,11 +72,12 @@ class TestMockServer:
         """Test port in use detection (port occupied)"""
         server = MockServer(contract_file, port=4010)
 
-        with patch('socket.socket') as mock_socket:
-            mock_sock = MagicMock()
-            mock_sock.connect_ex.return_value = 0  # Port in use
-            mock_socket.return_value.__enter__.return_value = mock_sock
+        # Mock psutil.net_connections to return a connection on port 4010
+        mock_conn = MagicMock()
+        mock_conn.laddr.port = 4010
+        mock_conn.status = 'LISTEN'
 
+        with patch('psutil.net_connections', return_value=[mock_conn]):
             result = server._is_port_in_use(4010)
             assert result is True
 
@@ -84,11 +85,8 @@ class TestMockServer:
         """Test port in use detection (port available)"""
         server = MockServer(contract_file, port=4010)
 
-        with patch('socket.socket') as mock_socket:
-            mock_sock = MagicMock()
-            mock_sock.connect_ex.return_value = 1  # Port available
-            mock_socket.return_value.__enter__.return_value = mock_sock
-
+        # Mock psutil.net_connections to return empty list (no port in use)
+        with patch('psutil.net_connections', return_value=[]):
             result = server._is_port_in_use(4010)
             assert result is False
 
@@ -216,7 +214,11 @@ class TestMockServer:
                     'validate': True
                 }, f)
 
-            with patch('psutil.pid_exists', return_value=True):
+            # Mock psutil.Process to return a running process
+            mock_process = MagicMock()
+            mock_process.is_running.return_value = True
+
+            with patch('psutil.Process', return_value=mock_process):
                 servers = MockServer.list_running()
 
                 assert len(servers) == 1
