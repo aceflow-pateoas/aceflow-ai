@@ -40,7 +40,7 @@ class MockServer:
         """
         try:
             result = subprocess.run(
-                ["prism", "version"],
+                ["prism", "--version"],
                 capture_output=True,
                 text=True,
                 timeout=5
@@ -97,12 +97,13 @@ class MockServer:
             cmd.extend(["--errors"])  # Show validation errors
 
         try:
-            # Start Prism in background
+            # Start Prism in background as daemon process
+            # Use start_new_session to detach from parent process
             self.process = subprocess.Popen(
                 cmd,
-                stdout=subprocess.PIPE,
-                stderr=subprocess.PIPE,
-                text=True
+                stdout=subprocess.DEVNULL,
+                stderr=subprocess.DEVNULL,
+                start_new_session=True
             )
 
             # Save PID
