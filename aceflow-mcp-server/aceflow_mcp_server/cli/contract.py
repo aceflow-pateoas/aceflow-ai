@@ -366,6 +366,94 @@ def push_contract(feature: str, message: Optional[str], branch: str):
         if console.is_terminal:
             console.print("[dim]详细错误信息:[/dim]")
             console.print(f"[dim]{traceback.format_exc()}[/dim]\n")
+
+
+@contract_group.command(name='pull')
+@click.option('--feature', required=True, help='Feature name to pull contract for')
+@click.option('--branch', default='main', help='Git branch (default: main)')
+@click.option('--output', help='Output directory (default: .aceflow/contracts/)')
+def pull_contract(feature: str, branch: str, output: Optional[str]):
+    """
+    Pull contract from Git repository to local.
+
+    Example:
+        aceflow contract pull --feature user-management
+        aceflow contract pull --feature user-management --branch develop
+    """
+    console.print("\n[bold cyan]⬇️  拉取契约从仓库[/bold cyan]\n")
+
+    try:
+        # Load configuration
+        config_path = Path.cwd() / ".aceflow" / "config.yaml"
+        if not config_path.exists():
+            console.print("[red]❌ 错误: 未找到配置文件[/red]")
+            console.print("[yellow]请先运行: aceflow init[/yellow]\n")
+            return
+
+        config = ContractConfig(config_path)
+
+        # Get contract repo URL
+        repo_url = config.contract_repo_url
+        if not repo_url:
+            console.print("[red]❌ 错误: 未配置契约仓库[/red]")
+            console.print("[yellow]请在配置文件中添加 contract_repo.url[/yellow]\n")
+            return
+
+        # Initialize repo
+        console.print(f"[dim]仓库: {repo_url}[/dim]")
+        console.print(f"[dim]分支: {branch}[/dim]")
+        console.print(f"[dim]需求: {feature}[/dim]\n")
+
+        repo = ContractRepo(repo_url)
+        base_path = config.contract_repo_base_path
+
+        # Clone or pull repository
+        console.print("[cyan]📥 克隆/更新契约仓库...[/cyan]")
+        repo.clone_or_pull(branch)
+        console.print("[green]✅ 仓库更新完成[/green]\n")
+
+        # Find contract file in repository
+        repo_contract_path = repo.repo_path / base_path / f"{feature}.json"
+        yaml_path = repo.repo_path / base_path / f"{feature}.yaml"
+
+        contract_source = None
+        if repo_contract_path.exists():
+            contract_source = repo_contract_path
+        elif yaml_path.exists():
+            contract_source = yaml_path
+        else:
+            console.print(f"[red]❌ 错误: 契约文件不存在: {feature}[/red]")
+            console.print(f"[yellow]在仓库路径: {base_path}/{feature}.(json|yaml)[/yellow]\n")
+            return
+
+        # Determine output path
+        if output:
+            output_dir = Path(output)
+        else:
+            output_dir = Path.cwd() / ".aceflow" / "contracts"
+
+        output_dir.mkdir(parents=True, exist_ok=True)
+        output_file = output_dir / contract_source.name
+
+        # Copy contract file to local
+        console.print(f"[cyan]📄 复制契约文件...[/cyan]")
+        import shutil
+        shutil.copy2(contract_source, output_file)
+
+        console.print(f"[bold green]✅ 契约拉取成功![/bold green]")
+        console.print(f"[dim]契约文件: {output_file}[/dim]\n")
+
+        # Display next steps
+        console.print("[bold]下一步:[/bold]")
+        console.print(f"  查看契约: [cyan]aceflow contract show {feature}[/cyan]")
+        console.print(f"  启动 Mock Server: [cyan]aceflow mock start --feature {feature}[/cyan]\n")
+
+    except Exception as e:
+        console.print(f"[red]❌ 拉取失败: {e}[/red]\n")
+        import traceback
+        if console.is_terminal:
+            console.print("[dim]详细错误信息:[/dim]")
+            console.print(f"[dim]{traceback.format_exc()}[/dim]\n")
         raise click.Abort()
 
 
