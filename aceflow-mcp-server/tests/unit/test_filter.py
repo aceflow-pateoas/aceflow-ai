@@ -18,7 +18,7 @@ class TestContractFilter:
 
     def test_prefix_match(self):
         """Test prefix path matching"""
-        filter_obj = ContractFilter('prefix', '/api/user/')
+        filter_obj = ContractFilter({'type': 'prefix', 'pattern': '/api/user/'})
 
         assert filter_obj.matches('/api/user/login') is True
         assert filter_obj.matches('/api/user/logout') is True
@@ -29,7 +29,7 @@ class TestContractFilter:
     def test_regex_match(self):
         """Test regex path matching"""
         # Match all /api/user/* endpoints
-        filter_obj = ContractFilter('regex', r'^/api/user/.*')
+        filter_obj = ContractFilter({'type': 'regex', 'pattern': r'^/api/user/.*'})
 
         assert filter_obj.matches('/api/user/login') is True
         assert filter_obj.matches('/api/user/123') is True
@@ -38,7 +38,7 @@ class TestContractFilter:
     def test_regex_complex_pattern(self):
         """Test complex regex patterns"""
         # Match paths with numeric IDs
-        filter_obj = ContractFilter('regex', r'^/api/\w+/\d+$')
+        filter_obj = ContractFilter({'type': 'regex', 'pattern': r'^/api/\w+/\d+$'})
 
         assert filter_obj.matches('/api/user/123') is True
         assert filter_obj.matches('/api/product/456') is True
@@ -57,7 +57,7 @@ class TestContractFilter:
         }
 
         # Test prefix filter
-        filter_obj = ContractFilter('prefix', '/api/user/')
+        filter_obj = ContractFilter({'type': 'prefix', 'pattern': '/api/user/'})
         filtered = filter_obj.filter_paths(openapi_spec)
 
         assert len(filtered['paths']) == 3
@@ -75,7 +75,7 @@ class TestContractFilter:
             }
         }
 
-        filter_obj = ContractFilter('prefix', '/api/user/')
+        filter_obj = ContractFilter({'type': 'prefix', 'pattern': '/api/user/'})
         filtered = filter_obj.filter_paths(openapi_spec)
 
         assert len(filtered['paths']) == 0
@@ -83,22 +83,23 @@ class TestContractFilter:
     def test_invalid_regex(self):
         """Test invalid regex pattern handling"""
         with pytest.raises(ValueError):
-            ContractFilter('regex', '[invalid(regex')
+            ContractFilter({'type': 'regex', 'pattern': '[invalid(regex'})
 
     def test_filter_type_validation(self):
         """Test filter type validation"""
         # Should not raise error for valid types
-        ContractFilter('exact', '/api/test')
-        ContractFilter('prefix', '/api/test')
-        ContractFilter('regex', '^/api/test')
+        ContractFilter({'type': 'exact', 'pattern': '/api/test'})
+        ContractFilter({'type': 'prefix', 'pattern': '/api/test'})
+        ContractFilter({'type': 'regex', 'pattern': '^/api/test'})
 
-        # Invalid type should work but with warning (or we could add validation)
-        filter_obj = ContractFilter('unknown', '/api/test')
-        assert filter_obj.matches('/api/test') is False
+        # Invalid type should raise ValueError
+        filter_obj = ContractFilter({'type': 'unknown', 'pattern': '/api/test'})
+        with pytest.raises(ValueError, match="Unknown filter type"):
+            filter_obj.matches('/api/test')
 
     def test_empty_pattern(self):
         """Test empty pattern handling"""
-        filter_obj = ContractFilter('prefix', '')
+        filter_obj = ContractFilter({'type': 'prefix', 'pattern': ''})
 
         # Empty prefix matches everything
         assert filter_obj.matches('/api/user/login') is True
@@ -106,7 +107,7 @@ class TestContractFilter:
 
     def test_case_sensitivity(self):
         """Test case sensitivity in matching"""
-        filter_obj = ContractFilter('exact', '/api/User/Login')
+        filter_obj = ContractFilter({'type': 'exact', 'pattern': '/api/User/Login'})
 
         # Exact match is case-sensitive
         assert filter_obj.matches('/api/User/Login') is True
@@ -114,7 +115,7 @@ class TestContractFilter:
 
     def test_regex_case_insensitive(self):
         """Test case-insensitive regex matching"""
-        filter_obj = ContractFilter('regex', r'(?i)^/api/user/.*')
+        filter_obj = ContractFilter({'type': 'regex', 'pattern': r'(?i)^/api/user/.*'})
 
         assert filter_obj.matches('/api/user/login') is True
         assert filter_obj.matches('/api/USER/login') is True
