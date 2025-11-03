@@ -4,29 +4,42 @@
 
 ### ✅ 通过的测试
 
-**test_filter.py: 11/11 (100%)** ✅
-- 所有契约过滤测试全部通过
-- 精确匹配、前缀匹配、正则匹配均正常
+**单元测试 (51/51 - 100%)** ✅
 
-**test_completion.py: 14/14 (100%)** ✅
-- 所有智能补全测试全部通过
-- ID/Date/UUID/Email/Phone 字段匹配正常
-- 嵌套 schema 处理正常
+- **test_filter.py: 11/11 (100%)** ✅
+  - 所有契约过滤测试全部通过
+  - 精确匹配、前缀匹配、正则匹配均正常
 
-**test_config.py: 12/12 (100%)** ✅
-- 所有配置管理测试全部通过
-- Feature 增删改查正常
-- SMTP/契约仓库配置正常
+- **test_completion.py: 14/14 (100%)** ✅
+  - 所有智能补全测试全部通过
+  - ID/Date/UUID/Email/Phone 字段匹配正常
+  - 嵌套 schema 处理正常
 
-**test_mock_server.py: 14/14 (100%)** ✅
-- 所有 Mock Server 测试全部通过
-- Prism 检测、启动、停止正常
-- 端口管理、进程列表正常
+- **test_config.py: 12/12 (100%)** ✅
+  - 所有配置管理测试全部通过
+  - Feature 增删改查正常
+  - SMTP/契约仓库配置正常
+
+- **test_mock_server.py: 14/14 (100%)** ✅
+  - 所有 Mock Server 测试全部通过
+  - Prism 检测、启动、停止正常
+  - 端口管理、进程列表正常
+
+**集成测试 (6/6 - 100%)** ✅
+
+- **test_contract_workflow.py: 6/6 (100%)** ✅
+  - test_contract_generation_workflow: 契约生成完整流程
+  - test_cli_feature_add_workflow: CLI feature 命令工作流
+  - test_contract_filter_completion_integration: 过滤与补全集成
+  - test_multiple_filters_workflow: 多种过滤类型工作流
+  - test_prism_detection_workflow: Prism 检测工作流
+  - test_end_to_end_config_to_contract: 端到端配置到契约生成
 
 ### 总体统计
 
 - **单元测试**: 51/51 通过 (100%) ✅
-- **集成测试**: 待运行
+- **集成测试**: 6/6 通过 (100%) ✅
+- **总计**: **57/57 通过 (100%)** ✅
 
 ## 已修复的问题
 
