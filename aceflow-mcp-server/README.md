@@ -82,6 +82,35 @@ curl http://localhost:4010/api/user/login
 aceflow mock stop --port 4010
 ```
 
+## 🤖 MCP Tools for AI-Driven Workflow
+
+AceFlow 现已提供 **13 个 MCP Tools**，支持完整的 AI 驱动 Contract-First 开发工作流！
+
+### 核心工作流工具 (4 个)
+
+- `aceflow_init` - 初始化项目基础结构
+- `aceflow_stage` - 管理工作流阶段
+- `aceflow_validate` - 验证项目合规性
+- `aceflow_template` - 管理工作流模板
+
+### Contract-First 工作流工具 (9 个)
+
+- `aceflow_init_project` - 初始化契约管理项目
+- `aceflow_define_feature` - 定义功能需求和 API 边界
+- `aceflow_design_api` - AI 辅助设计 OpenAPI 契约
+- `aceflow_contract_generate` - 从 Spring Boot 生成契约
+- `aceflow_contract_push` - 推送契约到 Git 并通知团队
+- `aceflow_contract_pull` - 从 Git 拉取契约
+- `aceflow_mock_start` - 启动 Mock Server
+- `aceflow_mock_stop` - 停止 Mock Server
+- `aceflow_validate_contract` - 验证实现与契约一致性
+
+**📖 完整 MCP Tools 使用指南**: [MCP Contract Tools Guide](../docs/MCP_CONTRACT_TOOLS_GUIDE.md)
+
+**🏗️ AI 工作流集成设计**: [AI Workflow Integration](../docs/AI_WORKFLOW_INTEGRATION.md)
+
+---
+
 ## 📚 命令参考
 
 ### 项目初始化

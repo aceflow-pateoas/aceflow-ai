@@ -12,6 +12,10 @@ def get_tools():
     from .tools import AceFlowTools
     return AceFlowTools()
 
+def get_contract_tools():
+    from .contract_tools import ContractWorkflowTools
+    return ContractWorkflowTools()
+
 def get_resources():
     from .resources import AceFlowResources
     return AceFlowResources()
@@ -58,6 +62,105 @@ def aceflow_template(
     """Manage workflow templates."""
     tools = get_tools()
     return tools.aceflow_template(action, template)
+
+# Contract Workflow Tools
+@mcp.tool
+def aceflow_init_project(
+    project_name: str,
+    workflow_mode: str = "contract_first",
+    openapi_url: Optional[str] = None,
+    repo_url: Optional[str] = None,
+    smtp_config: Optional[Dict] = None
+) -> Dict[str, Any]:
+    """Initialize AceFlow project with contract management."""
+    contract_tools = get_contract_tools()
+    return contract_tools.aceflow_init_project(
+        project_name, workflow_mode, openapi_url, repo_url, smtp_config
+    )
+
+@mcp.tool
+def aceflow_define_feature(
+    feature_name: str,
+    description: str,
+    api_scope: Dict[str, str],
+    requirements: list,
+    dev_team: Optional[list] = None
+) -> Dict[str, Any]:
+    """Define new feature requirements and API boundary."""
+    contract_tools = get_contract_tools()
+    return contract_tools.aceflow_define_feature(
+        feature_name, description, api_scope, requirements, dev_team
+    )
+
+@mcp.tool
+def aceflow_design_api(
+    feature: str,
+    endpoints: list,
+    base_url: Optional[str] = None
+) -> Dict[str, Any]:
+    """Design API contract endpoints (AI-assisted design)."""
+    contract_tools = get_contract_tools()
+    return contract_tools.aceflow_design_api(feature, endpoints, base_url)
+
+@mcp.tool
+def aceflow_contract_generate(
+    feature: str,
+    apply_smart_completion: bool = True,
+    output_format: str = "json"
+) -> Dict[str, Any]:
+    """Generate contract from Spring Boot OpenAPI Spec."""
+    contract_tools = get_contract_tools()
+    return contract_tools.aceflow_contract_generate(
+        feature, apply_smart_completion, output_format
+    )
+
+@mcp.tool
+def aceflow_contract_push(
+    feature: str,
+    message: Optional[str] = None,
+    notify_team: bool = True
+) -> Dict[str, Any]:
+    """Push contract to Git repository and notify team."""
+    contract_tools = get_contract_tools()
+    return contract_tools.aceflow_contract_push(feature, message, notify_team)
+
+@mcp.tool
+def aceflow_contract_pull(
+    feature: str,
+    branch: str = "main"
+) -> Dict[str, Any]:
+    """Pull contract from Git repository to local."""
+    contract_tools = get_contract_tools()
+    return contract_tools.aceflow_contract_pull(feature, branch)
+
+@mcp.tool
+def aceflow_mock_start(
+    feature: str,
+    port: int = 4010,
+    dynamic: bool = True,
+    validate: bool = True
+) -> Dict[str, Any]:
+    """Start Mock Server for frontend development."""
+    contract_tools = get_contract_tools()
+    return contract_tools.aceflow_mock_start(feature, port, dynamic, validate)
+
+@mcp.tool
+def aceflow_mock_stop(
+    port: Optional[int] = None,
+    stop_all: bool = False
+) -> Dict[str, Any]:
+    """Stop Mock Server."""
+    contract_tools = get_contract_tools()
+    return contract_tools.aceflow_mock_stop(port, stop_all)
+
+@mcp.tool
+def aceflow_validate_contract(
+    feature: str,
+    actual_openapi_url: str
+) -> Dict[str, Any]:
+    """Validate backend implementation against contract."""
+    contract_tools = get_contract_tools()
+    return contract_tools.aceflow_validate_contract(feature, actual_openapi_url)
 
 # Register resources with decorators
 @mcp.resource("aceflow://project/state/{project_id}")
