@@ -8,8 +8,6 @@ This module provides functionality for:
 - Process management
 """
 
-# Import modules when they are implemented
-# from .prism import PrismManager
-# from .manager import MockServerManager
+from .server import MockServer
 
-__all__ = []
+__all__ = ['MockServer']
