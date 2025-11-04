@@ -41,7 +41,7 @@ def start_mock(feature: str, port: int, no_dynamic: bool, no_validate: bool):
     console.print("\n[bold cyan]🚀 启动 Mock Server[/bold cyan]\n")
 
     # Find contract file
-    contracts_dir = Path.cwd() / ".aceflow" / "contracts"
+    contracts_dir = Path.cwd() / "aceflow_result" / "contracts"
     contract_file = None
 
     for ext in ['.json', '.yaml', '.yml']:

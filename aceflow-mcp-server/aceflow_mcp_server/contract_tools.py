@@ -217,7 +217,7 @@ class ContractWorkflowTools:
             )
 
             # Create requirements document
-            requirements_dir = Path.cwd() / ".aceflow" / "requirements"
+            requirements_dir = Path.cwd() / "aceflow_result" / "requirements"
             requirements_dir.mkdir(parents=True, exist_ok=True)
 
             requirements_file = requirements_dir / f"{feature_name}.md"
@@ -374,7 +374,7 @@ class ContractWorkflowTools:
                 openapi_spec = smart_completion.apply_to_openapi(openapi_spec)
 
             # Save to contracts directory
-            contracts_dir = Path.cwd() / ".aceflow" / "contracts"
+            contracts_dir = Path.cwd() / "aceflow_result" / "contracts"
             contracts_dir.mkdir(parents=True, exist_ok=True)
 
             contract_file = contracts_dir / f"{feature}.json"
@@ -446,7 +446,7 @@ class ContractWorkflowTools:
             output = result.stdout
 
             # Find contract file
-            contracts_dir = Path.cwd() / ".aceflow" / "contracts"
+            contracts_dir = Path.cwd() / "aceflow_result" / "contracts"
             extension = 'yaml' if output_format == 'yaml' else 'json'
             contract_file = contracts_dir / f"{feature}.{extension}"
 
@@ -601,7 +601,7 @@ class ContractWorkflowTools:
             )
 
             # Find contract file
-            contracts_dir = Path.cwd() / ".aceflow" / "contracts"
+            contracts_dir = Path.cwd() / "aceflow_result" / "contracts"
             contract_file = None
             for ext in ['.json', '.yaml', '.yml']:
                 potential_file = contracts_dir / f"{feature}{ext}"
@@ -679,7 +679,7 @@ class ContractWorkflowTools:
             )
 
             # Find contract file
-            contracts_dir = Path.cwd() / ".aceflow" / "contracts"
+            contracts_dir = Path.cwd() / "aceflow_result" / "contracts"
             contract_file = None
             for ext in ['.json', '.yaml', '.yml']:
                 potential_file = contracts_dir / f"{feature}{ext}"
@@ -806,7 +806,7 @@ class ContractWorkflowTools:
         """
         try:
             # Load contract file
-            contracts_dir = Path.cwd() / ".aceflow" / "contracts"
+            contracts_dir = Path.cwd() / "aceflow_result" / "contracts"
             contract_file = None
             for ext in ['.json', '.yaml', '.yml']:
                 potential_file = contracts_dir / f"{feature}{ext}"

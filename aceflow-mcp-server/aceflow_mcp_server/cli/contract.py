@@ -150,7 +150,7 @@ def list_contracts():
     """
     console.print("\n[bold cyan]📋 契约文件列表[/bold cyan]\n")
 
-    contracts_dir = Path.cwd() / ".aceflow" / "contracts"
+    contracts_dir = Path.cwd() / "aceflow_result" / "contracts"
     if not contracts_dir.exists():
         console.print("[yellow]暂无契约文件[/yellow]")
         console.print("\n[bold]生成契约:[/bold]")
@@ -202,7 +202,7 @@ def show_contract(feature: str):
     """
     console.print(f"\n[bold cyan]📄 契约详情: {feature}[/bold cyan]\n")
 
-    contracts_dir = Path.cwd() / ".aceflow" / "contracts"
+    contracts_dir = Path.cwd() / "aceflow_result" / "contracts"
 
     # Try to find contract file
     contract_file = None
@@ -285,7 +285,7 @@ def push_contract(feature: str, message: Optional[str], branch: str):
         return
 
     # Find contract file
-    contracts_dir = Path.cwd() / ".aceflow" / "contracts"
+    contracts_dir = Path.cwd() / "aceflow_result" / "contracts"
     contract_file = None
 
     for ext in ['.json', '.yaml', '.yml']:
