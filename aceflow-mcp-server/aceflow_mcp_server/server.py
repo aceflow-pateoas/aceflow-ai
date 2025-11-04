@@ -162,6 +162,38 @@ def aceflow_validate_contract(
     contract_tools = get_contract_tools()
     return contract_tools.aceflow_validate_contract(feature, actual_openapi_url)
 
+# Workflow State Management Tools
+@mcp.tool
+def aceflow_workflow_status() -> Dict[str, Any]:
+    """Get current workflow status and progress."""
+    contract_tools = get_contract_tools()
+    return contract_tools.aceflow_workflow_status()
+
+@mcp.tool
+def aceflow_workflow_advance(
+    next_stage: str,
+    feature_name: Optional[str] = None
+) -> Dict[str, Any]:
+    """Advance workflow to the next stage."""
+    contract_tools = get_contract_tools()
+    return contract_tools.aceflow_workflow_advance(next_stage, feature_name)
+
+@mcp.tool
+def aceflow_workflow_checkpoint(
+    stage: str,
+    checkpoint: str,
+    value: bool
+) -> Dict[str, Any]:
+    """Update a checkpoint for a workflow stage."""
+    contract_tools = get_contract_tools()
+    return contract_tools.aceflow_workflow_checkpoint(stage, checkpoint, value)
+
+@mcp.tool
+def aceflow_workflow_recommendations() -> Dict[str, Any]:
+    """Get intelligent recommendations for next actions."""
+    contract_tools = get_contract_tools()
+    return contract_tools.aceflow_workflow_recommendations()
+
 # Register resources with decorators
 @mcp.resource("aceflow://project/state/{project_id}")
 def project_state(project_id: str = "current") -> str:

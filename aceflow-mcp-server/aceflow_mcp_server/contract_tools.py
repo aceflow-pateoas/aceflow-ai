@@ -17,6 +17,7 @@ from .contract.completion import SmartCompletion
 from .contract.repo import ContractRepo
 from .mock.server import MockServer
 from .notification.email import EmailNotifier
+from .core.contract_workflow_engine import ContractFirstWorkflowEngine, WorkflowStage
 
 
 class ContractWorkflowTools:
@@ -25,6 +26,7 @@ class ContractWorkflowTools:
     def __init__(self):
         """Initialize contract workflow tools."""
         self.config = None
+        self.workflow_engine = ContractFirstWorkflowEngine()
 
     def _load_config(self) -> Optional[ContractConfig]:
         """Load configuration from current working directory."""
@@ -100,6 +102,28 @@ class ContractWorkflowTools:
                     from_addr=smtp_config.get('from')
                 )
 
+            # Initialize workflow state
+            workflow_state = self.workflow_engine.initialize_workflow(project_name, workflow_mode)
+
+            # Update workflow context
+            if openapi_url or repo_url:
+                state = self.workflow_engine.get_state()
+                if state:
+                    if openapi_url:
+                        state["context"]["openapi_url"] = openapi_url
+                    if repo_url:
+                        state["context"]["repo_url"] = repo_url
+                    self.workflow_engine._save_state(state)
+
+            # Mark setup checkpoints
+            self.workflow_engine.update_checkpoint(WorkflowStage.SETUP, "config_file_exists", True)
+            if openapi_url:
+                self.workflow_engine.update_checkpoint(WorkflowStage.SETUP, "openapi_url_valid", True)
+            if repo_url:
+                self.workflow_engine.update_checkpoint(WorkflowStage.SETUP, "repo_url_valid", True)
+            if smtp_config:
+                self.workflow_engine.update_checkpoint(WorkflowStage.SETUP, "smtp_configured", True)
+
             next_steps = []
             if workflow_mode == "contract_first":
                 next_steps = [
@@ -116,10 +140,13 @@ class ContractWorkflowTools:
             return {
                 "success": True,
                 "config_path": ".aceflow/config.yaml",
+                "workflow_file": ".aceflow/workflow.json",
                 "mode": workflow_mode,
                 "project_name": project_name,
                 "openapi_url": openapi_url,
                 "repo_url": repo_url,
+                "workflow_initialized": True,
+                "current_stage": workflow_state["current_stage"],
                 "next_steps": next_steps,
                 "message": f"Project '{project_name}' initialized successfully in {workflow_mode} mode"
             }
@@ -844,4 +871,188 @@ class ContractWorkflowTools:
                 "success": False,
                 "error": str(e),
                 "message": "Failed to validate contract"
+            }
+
+    # ==================== Workflow State Management ====================
+
+    def aceflow_workflow_status(self) -> Dict[str, Any]:
+        """
+        Get current workflow status and progress.
+
+        Returns:
+            {
+                "success": True,
+                "current_stage": "design",
+                "overall_progress": 30,
+                "completed_stages": 3,
+                "total_stages": 10,
+                "features": {...},
+                "recommendations": [...]
+            }
+        """
+        try:
+            # Get workflow state
+            state = self.workflow_engine.get_state()
+
+            if not state:
+                return {
+                    "success": False,
+                    "error": "Workflow not initialized",
+                    "message": "Please initialize workflow using aceflow_init_project"
+                }
+
+            # Get progress
+            progress = self.workflow_engine.get_progress()
+
+            # Get recommendations
+            recommendations = self.workflow_engine.get_recommendations()
+
+            return {
+                "success": True,
+                "current_stage": state["current_stage"],
+                "workflow_mode": state["workflow_mode"],
+                "overall_progress": progress["overall_progress"],
+                "completed_stages": progress["completed_stages"],
+                "total_stages": progress["total_stages"],
+                "features": state.get("features", {}),
+                "metrics": state.get("metrics", {}),
+                "recommendations": recommendations,
+                "message": f"Currently at {state['current_stage']} stage ({progress['overall_progress']}% complete)"
+            }
+
+        except Exception as e:
+            return {
+                "success": False,
+                "error": str(e),
+                "message": "Failed to get workflow status"
+            }
+
+    def aceflow_workflow_advance(
+        self,
+        next_stage: str,
+        feature_name: Optional[str] = None
+    ) -> Dict[str, Any]:
+        """
+        Advance workflow to the next stage.
+
+        Args:
+            next_stage: Target stage name (setup/define/design/implement/contract_push/
+                       frontend_dev/validate/integration/review/completed)
+            feature_name: Optional feature name for tracking
+
+        Returns:
+            {
+                "success": True,
+                "previous_stage": "design",
+                "current_stage": "implement",
+                "message": "Advanced to implement stage"
+            }
+        """
+        try:
+            # Convert string to enum
+            try:
+                target_stage = WorkflowStage(next_stage)
+            except ValueError:
+                valid_stages = [s.value for s in WorkflowStage]
+                return {
+                    "success": False,
+                    "error": f"Invalid stage: {next_stage}",
+                    "message": f"Valid stages: {valid_stages}"
+                }
+
+            # Advance stage
+            result = self.workflow_engine.advance_stage(target_stage, feature_name)
+
+            return result
+
+        except Exception as e:
+            return {
+                "success": False,
+                "error": str(e),
+                "message": "Failed to advance workflow"
+            }
+
+    def aceflow_workflow_checkpoint(
+        self,
+        stage: str,
+        checkpoint: str,
+        value: bool
+    ) -> Dict[str, Any]:
+        """
+        Update a checkpoint for a workflow stage.
+
+        Used to mark stage completion criteria as met/unmet.
+
+        Args:
+            stage: Stage name
+            checkpoint: Checkpoint name (e.g., "config_file_exists", "contract_compliant")
+            value: Checkpoint value (True/False)
+
+        Returns:
+            {
+                "success": True,
+                "stage": "design",
+                "checkpoint": "contract_file_exists",
+                "value": True
+            }
+        """
+        try:
+            # Convert string to enum
+            try:
+                stage_enum = WorkflowStage(stage)
+            except ValueError:
+                valid_stages = [s.value for s in WorkflowStage]
+                return {
+                    "success": False,
+                    "error": f"Invalid stage: {stage}",
+                    "message": f"Valid stages: {valid_stages}"
+                }
+
+            # Update checkpoint
+            result = self.workflow_engine.update_checkpoint(stage_enum, checkpoint, value)
+
+            return result
+
+        except Exception as e:
+            return {
+                "success": False,
+                "error": str(e),
+                "message": "Failed to update checkpoint"
+            }
+
+    def aceflow_workflow_recommendations(self) -> Dict[str, Any]:
+        """
+        Get intelligent recommendations for next actions.
+
+        Based on current workflow state, provides context-aware suggestions
+        for what to do next.
+
+        Returns:
+            {
+                "success": True,
+                "recommendations": [
+                    {
+                        "priority": "high",
+                        "action": "Push contract to Git",
+                        "tool": "aceflow_contract_push",
+                        "benefits": [...]
+                    }
+                ]
+            }
+        """
+        try:
+            recommendations = self.workflow_engine.get_recommendations()
+
+            return {
+                "success": True,
+                "count": len(recommendations),
+                "recommendations": recommendations,
+                "message": f"Found {len(recommendations)} recommendation(s)"
+            }
+
+        except Exception as e:
+            return {
+                "success": False,
+                "error": str(e),
+                "message": "Failed to get recommendations"
             }
