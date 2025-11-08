@@ -9,7 +9,6 @@ from datetime import datetime
 from aceflow.workflow.models import (
     WorkflowMode,
     StageStatus,
-    IterationStatus,
     Stage,
     Iteration,
     StateTransition
@@ -117,23 +116,27 @@ class TestIteration:
         assert iteration.iteration_id == "iter_001"
         assert iteration.mode == WorkflowMode.MINIMAL
         assert len(iteration.stages) == 2
-        assert iteration.status == IterationStatus.IN_PROGRESS
 
     def test_iteration_current_stage(self):
         """测试当前阶段属性"""
         stages = [
             Stage(stage_id="P1", name="规划", description="规划阶段"),
-            Stage(stage_id="D1", name="开发", description="开发阶段", status=StageStatus.IN_PROGRESS)
+            Stage(stage_id="D1", name="开发", description="开发阶段")
         ]
 
         iteration = Iteration(
             iteration_id="iter_001",
             mode=WorkflowMode.MINIMAL,
-            stages=stages
+            stages=stages,
+            current_stage_index=0
         )
 
-        # 第一个 in_progress 的阶段是当前阶段
+        # current_stage 返回 current_stage_index 指向的阶段
         assert iteration.current_stage is not None
+        assert iteration.current_stage.stage_id == "P1"
+
+        # 测试修改 current_stage_index
+        iteration.current_stage_index = 1
         assert iteration.current_stage.stage_id == "D1"
 
     def test_iteration_get_stage_by_id(self):
@@ -212,27 +215,24 @@ class TestStateTransition:
     def test_transition_creation(self):
         """测试创建转换记录"""
         transition = StateTransition(
-            from_status=StageStatus.PENDING,
-            to_status=StageStatus.IN_PROGRESS,
-            stage_id="P1",
-            reason="开始工作"
+            from_stage="P1",
+            to_stage="D1",
+            reasoning="开始工作"
         )
 
-        assert transition.from_status == StageStatus.PENDING
-        assert transition.to_status == StageStatus.IN_PROGRESS
-        assert transition.stage_id == "P1"
-        assert transition.reason == "开始工作"
+        assert transition.from_stage == "P1"
+        assert transition.to_stage == "D1"
+        assert transition.reasoning == "开始工作"
 
     def test_transition_to_dict(self):
         """测试转换记录转字典"""
         transition = StateTransition(
-            from_status=StageStatus.PENDING,
-            to_status=StageStatus.COMPLETED,
-            stage_id="P1"
+            from_stage="P1",
+            to_stage="D1"
         )
 
         data = transition.to_dict()
 
-        assert data['from_status'] == "pending"
-        assert data['to_status'] == "completed"
+        assert data['from_stage'] == "P1"
+        assert data['to_stage'] == "D1"
         assert 'timestamp' in data

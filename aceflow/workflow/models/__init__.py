@@ -41,6 +41,8 @@ class Stage:
     tasks: List[str] = field(default_factory=list)
     deliverables: List[str] = field(default_factory=list)
     metadata: Dict[str, Any] = field(default_factory=dict)
+    created_at: datetime = field(default_factory=datetime.now)
+    updated_at: datetime = field(default_factory=datetime.now)
 
     def to_dict(self) -> Dict[str, Any]:
         """Convert to dictionary"""
@@ -54,8 +56,28 @@ class Stage:
             'end_time': self.end_time.isoformat() if self.end_time else None,
             'tasks': self.tasks,
             'deliverables': self.deliverables,
-            'metadata': self.metadata
+            'metadata': self.metadata,
+            'created_at': self.created_at.isoformat(),
+            'updated_at': self.updated_at.isoformat()
         }
+
+    @classmethod
+    def from_dict(cls, data: Dict[str, Any]) -> 'Stage':
+        """Create from dictionary"""
+        return cls(
+            stage_id=data['stage_id'],
+            name=data['name'],
+            description=data['description'],
+            status=StageStatus(data.get('status', 'pending')),
+            progress=data.get('progress', 0.0),
+            start_time=datetime.fromisoformat(data['start_time']) if data.get('start_time') else None,
+            end_time=datetime.fromisoformat(data['end_time']) if data.get('end_time') else None,
+            tasks=data.get('tasks', []),
+            deliverables=data.get('deliverables', []),
+            metadata=data.get('metadata', {}),
+            created_at=datetime.fromisoformat(data['created_at']) if 'created_at' in data else datetime.now(),
+            updated_at=datetime.fromisoformat(data['updated_at']) if 'updated_at' in data else datetime.now()
+        )
 
 
 @dataclass
@@ -83,6 +105,13 @@ class Iteration:
             return 0.0
         completed = sum(1 for stage in self.stages if stage.status == StageStatus.COMPLETED)
         return completed / len(self.stages)
+
+    def get_stage_by_id(self, stage_id: str) -> Optional['Stage']:
+        """根据stage_id获取阶段"""
+        for stage in self.stages:
+            if stage.stage_id == stage_id:
+                return stage
+        return None
 
     def to_dict(self) -> Dict[str, Any]:
         """Convert to dictionary"""

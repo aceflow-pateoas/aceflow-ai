@@ -1,19 +1,18 @@
 """
 测试状态管理器
 
-测试 aceflow.workflow.state.StateManager
+测试 aceflow.workflow.core.state.StateManager
 """
 
 import pytest
 import tempfile
 import shutil
 from pathlib import Path
-from aceflow.workflow.state import StateManager
+from aceflow.workflow.core.state import StateManager
 from aceflow.workflow.models import (
     WorkflowMode,
     StageStatus,
-    Stage,
-    Iteration
+    Stage
 )
 
 
@@ -30,183 +29,165 @@ class TestStateManager:
     @pytest.fixture
     def state_manager(self, temp_dir):
         """创建状态管理器实例"""
-        return StateManager(storage_dir=temp_dir)
+        return StateManager(project_id="test_project", state_dir=temp_dir)
 
-    def test_create_iteration(self, state_manager):
-        """测试创建迭代"""
-        stages = [
-            Stage(stage_id="P", name="规划", description="规划阶段"),
+    def test_state_manager_creation(self, state_manager):
+        """测试状态管理器创建"""
+        assert state_manager is not None
+        assert state_manager.project_id == "test_project"
+        assert state_manager.state_dir.exists()
+
+    def test_initialize_iteration(self, state_manager):
+        """测试初始化迭代"""
+        iteration = state_manager.initialize_iteration(
+            mode=WorkflowMode.MINIMAL,
+            metadata={"goal": "测试目标"}
+        )
+
+        assert iteration is not None
+        assert iteration.mode == WorkflowMode.MINIMAL
+        assert iteration.metadata["goal"] == "测试目标"
+
+    def test_get_current_iteration(self, state_manager):
+        """测试获取当前迭代"""
+        # 初始时没有迭代
+        assert state_manager.get_current_iteration() is None
+
+        # 初始化后有迭代
+        iteration = state_manager.initialize_iteration(WorkflowMode.MINIMAL)
+        current = state_manager.get_current_iteration()
+
+        assert current is not None
+        assert current.iteration_id == iteration.iteration_id
+
+    def test_get_current_stage(self, state_manager):
+        """测试获取当前阶段"""
+        # 初始化迭代
+        iteration = state_manager.initialize_iteration(WorkflowMode.MINIMAL)
+
+        # 添加一些阶段
+        iteration.stages = [
+            Stage(stage_id="P", name="规划", description="规划阶段", status=StageStatus.IN_PROGRESS),
             Stage(stage_id="D", name="开发", description="开发阶段")
         ]
 
-        iteration = state_manager.create_iteration(
-            iteration_id="iter_001",
-            mode=WorkflowMode.MINIMAL,
-            stages=stages
-        )
+        current_stage = state_manager.get_current_stage()
+        assert current_stage is not None
+        assert current_stage.stage_id == "P"
 
-        assert iteration.iteration_id == "iter_001"
-        assert iteration.mode == WorkflowMode.MINIMAL
-        assert len(iteration.stages) == 2
-
-    def test_get_iteration(self, state_manager):
-        """测试获取迭代"""
-        stages = [Stage(stage_id="P", name="规划", description="规划")]
-
-        # 创建迭代
-        state_manager.create_iteration(
-            iteration_id="iter_001",
-            mode=WorkflowMode.MINIMAL,
-            stages=stages
-        )
-
-        # 获取迭代
-        iteration = state_manager.get_iteration("iter_001")
-        assert iteration is not None
-        assert iteration.iteration_id == "iter_001"
-
-        # 获取不存在的迭代
-        iteration = state_manager.get_iteration("iter_999")
-        assert iteration is None
-
-    def test_update_iteration(self, state_manager):
-        """测试更新迭代"""
-        stages = [Stage(stage_id="P", name="规划", description="规划")]
-
-        iteration = state_manager.create_iteration(
-            iteration_id="iter_001",
-            mode=WorkflowMode.MINIMAL,
-            stages=stages
-        )
-
-        # 修改迭代
-        iteration.metadata['updated'] = True
-
-        # 更新
-        success = state_manager.update_iteration(iteration)
-        assert success
-
-        # 验证更新
-        updated = state_manager.get_iteration("iter_001")
-        assert updated.metadata.get('updated') is True
-
-    def test_update_stage_status(self, state_manager):
-        """测试更新阶段状态"""
-        stages = [
-            Stage(stage_id="P", name="规划", description="规划"),
-            Stage(stage_id="D", name="开发", description="开发")
+    def test_advance_stage(self, state_manager):
+        """测试推进阶段"""
+        # 初始化迭代并添加阶段
+        iteration = state_manager.initialize_iteration(WorkflowMode.MINIMAL)
+        iteration.stages = [
+            Stage(stage_id="P", name="规划", description="规划阶段", status=StageStatus.IN_PROGRESS),
+            Stage(stage_id="D", name="开发", description="开发阶段")
         ]
 
-        state_manager.create_iteration(
-            iteration_id="iter_001",
-            mode=WorkflowMode.MINIMAL,
-            stages=stages
-        )
+        # 推进到下一阶段
+        success = state_manager.advance_stage()
+        assert success is True
 
-        # 更新阶段状态
-        success = state_manager.update_stage_status(
-            "iter_001",
-            "P",
-            StageStatus.COMPLETED
-        )
-        assert success
+        # 验证阶段推进
+        current = state_manager.get_current_stage()
+        assert current is not None
+        assert current.stage_id == "D"
 
-        # 验证更新
-        iteration = state_manager.get_iteration("iter_001")
-        stage = iteration.get_stage_by_id("P")
-        assert stage.status == StageStatus.COMPLETED
+        # 验证前一阶段已完成
+        assert iteration.stages[0].status == StageStatus.COMPLETED
 
-    def test_list_iterations(self, state_manager):
-        """测试列出所有迭代"""
-        # 创建多个迭代
-        for i in range(3):
-            stages = [Stage(stage_id="P", name="规划", description="规划")]
-            state_manager.create_iteration(
-                iteration_id=f"iter_{i:03d}",
-                mode=WorkflowMode.MINIMAL,
-                stages=stages
-            )
+    def test_update_stage_progress(self, state_manager):
+        """测试更新阶段进度"""
+        iteration = state_manager.initialize_iteration(WorkflowMode.MINIMAL)
+        iteration.stages = [
+            Stage(stage_id="P", name="规划", description="规划阶段", status=StageStatus.IN_PROGRESS)
+        ]
 
-        # 列出迭代
-        iterations = state_manager.list_iterations()
-        assert len(iterations) == 3
+        # 更新进度
+        state_manager.update_stage_progress(0.5)
 
-    def test_get_latest_iteration(self, state_manager):
-        """测试获取最新迭代"""
-        # 创建多个迭代
-        for i in range(3):
-            stages = [Stage(stage_id="P", name="规划", description="规划")]
-            state_manager.create_iteration(
-                iteration_id=f"iter_{i:03d}",
-                mode=WorkflowMode.MINIMAL,
-                stages=stages
-            )
+        # 验证进度
+        current = state_manager.get_current_stage()
+        assert current.progress == 0.5
 
-        # 获取最新
-        latest = state_manager.get_latest_iteration()
-        assert latest is not None
-        # 最新的应该是最后创建的
-        assert latest.iteration_id == "iter_002"
+    def test_get_state_summary(self, state_manager):
+        """测试获取状态摘要"""
+        # 初始时没有迭代
+        summary = state_manager.get_state_summary()
+        assert summary['status'] == 'no_iteration'
 
-    def test_delete_iteration(self, state_manager):
-        """测试删除迭代"""
-        stages = [Stage(stage_id="P", name="规划", description="规划")]
+        # 初始化迭代后
+        iteration = state_manager.initialize_iteration(WorkflowMode.MINIMAL)
+        iteration.stages = [
+            Stage(stage_id="P", name="规划", description="规划阶段", status=StageStatus.IN_PROGRESS)
+        ]
 
-        state_manager.create_iteration(
-            iteration_id="iter_001",
-            mode=WorkflowMode.MINIMAL,
-            stages=stages
-        )
+        summary = state_manager.get_state_summary()
+        assert summary['status'] == 'active'
+        assert 'iteration_id' in summary
+        assert 'mode' in summary
+        assert 'current_stage' in summary
 
-        # 删除
-        success = state_manager.delete_iteration("iter_001")
-        assert success
+    def test_get_transition_history(self, state_manager):
+        """测试获取转换历史"""
+        # 初始化迭代
+        state_manager.initialize_iteration(WorkflowMode.MINIMAL)
 
-        # 验证删除
-        iteration = state_manager.get_iteration("iter_001")
-        assert iteration is None
+        # 获取转换历史
+        history = state_manager.get_transition_history()
+
+        assert len(history) > 0
+        assert 'from_stage' in history[0]
+        assert 'to_stage' in history[0]
+
+    def test_validate_state(self, state_manager):
+        """测试状态验证"""
+        # 没有迭代时应该有错误
+        result = state_manager.validate_state()
+        assert result['valid'] is False
+        assert len(result['errors']) > 0
+
+        # 有迭代时
+        iteration = state_manager.initialize_iteration(WorkflowMode.MINIMAL)
+        iteration.stages = [
+            Stage(stage_id="P", name="规划", description="规划阶段", status=StageStatus.IN_PROGRESS)
+        ]
+
+        result = state_manager.validate_state()
+        assert result['valid'] is True
+
+    def test_rollback_stage(self, state_manager):
+        """测试回滚阶段"""
+        # 初始化迭代并添加阶段
+        iteration = state_manager.initialize_iteration(WorkflowMode.MINIMAL)
+        iteration.stages = [
+            Stage(stage_id="P", name="规划", description="规划阶段", status=StageStatus.IN_PROGRESS),
+            Stage(stage_id="D", name="开发", description="开发阶段")
+        ]
+
+        # 推进到下一阶段
+        state_manager.advance_stage()
+        assert state_manager.get_current_stage().stage_id == "D"
+
+        # 回滚
+        success = state_manager.rollback_stage()
+        assert success is True
+        assert state_manager.get_current_stage().stage_id == "P"
 
     def test_persistence(self, temp_dir):
         """测试持久化"""
         # 创建第一个管理器并保存数据
-        manager1 = StateManager(storage_dir=temp_dir)
-        stages = [Stage(stage_id="P", name="规划", description="规划")]
-        manager1.create_iteration(
-            iteration_id="iter_001",
-            mode=WorkflowMode.MINIMAL,
-            stages=stages
-        )
+        manager1 = StateManager(project_id="test_persist", state_dir=temp_dir)
+        iteration = manager1.initialize_iteration(WorkflowMode.MINIMAL)
+        iteration.stages = [
+            Stage(stage_id="P", name="规划", description="规划阶段")
+        ]
+
+        iteration_id = iteration.iteration_id
 
         # 创建第二个管理器，应该能加载数据
-        manager2 = StateManager(storage_dir=temp_dir)
-        iteration = manager2.get_iteration("iter_001")
+        manager2 = StateManager(project_id="test_persist", state_dir=temp_dir)
+        loaded_iteration = manager2.get_current_iteration()
 
-        assert iteration is not None
-        assert iteration.iteration_id == "iter_001"
-
-    def test_get_transitions(self, state_manager):
-        """测试获取状态转换历史"""
-        stages = [Stage(stage_id="P", name="规划", description="规划")]
-
-        state_manager.create_iteration(
-            iteration_id="iter_001",
-            mode=WorkflowMode.MINIMAL,
-            stages=stages
-        )
-
-        # 更新状态以产生转换记录
-        state_manager.update_stage_status(
-            "iter_001",
-            "P",
-            StageStatus.IN_PROGRESS
-        )
-
-        state_manager.update_stage_status(
-            "iter_001",
-            "P",
-            StageStatus.COMPLETED
-        )
-
-        # 获取转换历史
-        transitions = state_manager.get_transitions("iter_001")
-        assert len(transitions) >= 2
+        assert loaded_iteration is not None
+        assert loaded_iteration.iteration_id == iteration_id
