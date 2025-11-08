@@ -1,8 +1,0 @@
-{
-  "mcpServers": {
-    "aceflow": {
-      "command": "aceflow-mcp-server",
-      "args": []
-    }
-  }
-}

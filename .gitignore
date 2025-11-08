@@ -28,6 +28,9 @@ venv/
 ENV/
 env.bak/
 venv.bak/
+*_env/
+*_test_env/
+test_*_env/
 
 # IDE
 .idea/
@@ -41,6 +44,21 @@ venv.bak/
 .aceflow/
 **/.aceflow/
 **/.claude/
+
+# Temporary test directories
+*_test/
+test_*/
+fresh_project_test/
+real_project_test/
+
+# Test artifacts
+*.log
+test_output/
+.pytest_cache/
+*.egg-info/
+
+# Cleanup scripts (temporary)
+cleanup_*.sh
 
 # OS specific
 .DS_Store
