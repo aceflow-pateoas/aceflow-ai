@@ -10,8 +10,8 @@ import shutil
 import json
 from pathlib import Path
 from aceflow.workflow.exporter import DocumentExporter, ExportOptions, ExportFormat, ExportResult
-from aceflow.workflow.state import StateManager
-from aceflow.workflow.engine import WorkflowEngine
+from aceflow.workflow.core.state import StateManager  # 修正: 从 core.state 导入
+from aceflow.workflow.core.engine import WorkflowEngine  # 修正: 从 core.engine 导入
 from aceflow.workflow.models import WorkflowMode, StageStatus
 
 
@@ -129,7 +129,7 @@ class TestDocumentExporter:
     @pytest.fixture
     def state_manager(self, temp_dir):
         """创建状态管理器"""
-        return StateManager(storage_dir=temp_dir / "state")
+        return StateManager(project_id="export_test", state_dir=temp_dir / "state")
 
     @pytest.fixture
     def exporter(self, state_manager):
@@ -139,7 +139,9 @@ class TestDocumentExporter:
     @pytest.fixture
     def sample_iteration(self, state_manager):
         """创建示例迭代"""
-        engine = WorkflowEngine(WorkflowMode.MINIMAL, state_manager)
+        # WorkflowEngine 使用 project_id 初始化
+        engine = WorkflowEngine(project_id=state_manager.project_id)
+        engine.state_manager = state_manager
         iteration = engine.start_iteration("export_test_001")
 
         # 完成第一个阶段

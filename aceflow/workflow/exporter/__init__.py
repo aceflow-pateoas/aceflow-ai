@@ -9,10 +9,11 @@ Exporter - 文档导出工具
 """
 
 from .exporter import DocumentExporter
-from .models import ExportFormat, ExportOptions
+from .models import ExportFormat, ExportOptions, ExportResult  # 添加 ExportResult
 
 __all__ = [
     'DocumentExporter',
     'ExportFormat',
-    'ExportOptions'
+    'ExportOptions',
+    'ExportResult'  # 添加到导出列表
 ]

@@ -11,7 +11,7 @@ from typing import Optional, List, Dict, Any
 from datetime import datetime
 
 from .models import ExportFormat, ExportOptions, ExportResult
-from ..state import StateManager
+from ..core.state import StateManager  # 修正: 从 core.state 导入
 from ..memory import MemoryManager
 from ..models import Iteration
 
