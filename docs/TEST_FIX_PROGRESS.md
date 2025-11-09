@@ -1,7 +1,7 @@
 # 测试修复进度报告
 
 **更新时间**: 2025-11-08
-**当前状态**: Phase 3.1.5 进行中 (2/8 完成)
+**当前状态**: Phase 3.1.5 进行中 (5/8 完成)
 
 ## ✅ 已完成的修复
 
@@ -74,42 +74,67 @@ PYTHONPATH=/home/chenjing/AI/aceflow-ai python3 -m pytest tests/workflow/test_st
 
 **结果**: ✅ 11 passed in 0.08s
 
+#### ✅ test_engine.py - 12/12 测试通过
+
+**修复内容**:
+1. 修正 WorkflowEngine 构造函数
+2. 添加模式注册逻辑
+3. 修正 update_progress 测试断言
+
+**运行命令**:
+```bash
+PYTHONPATH=/home/chenjing/AI/aceflow-ai python3 -m pytest tests/workflow/test_engine.py -v
+```
+
+**结果**: ✅ 12 passed in 0.14s
+
+#### ✅ test_templates.py - 16/16 测试通过
+
+**修复内容**:
+1. 修正 TemplateVariable 构造函数参数
+2. 修正 Template 构造函数: file_path 而非 template_path
+3. 修正方法名称:
+   - get_all_templates() → list_all_templates()
+   - render_and_save() → write_template()
+4. 修正属性名称: _templates → templates
+5. 修正 write_template() 参数顺序
+
+**运行命令**:
+```bash
+PYTHONPATH=/home/chenjing/AI/aceflow-ai python3 -m pytest tests/workflow/test_templates.py -v
+```
+
+**结果**: ✅ 16 passed in 0.36s
+
+#### ✅ test_memory.py - 24/24 测试通过
+
+**修复内容**:
+1. 修正 Memory.to_dict(): 使用 created_at 而非 timestamp
+2. 修正 Memory.from_dict(): 添加必须的 created_at 字段
+3. 修正 MemoryStore 测试: 文件在首次保存时才创建
+4. 修正 record_* 方法返回值: 返回 Memory 对象而非 memory_id
+5. 修正 record_stage_output(): 需要 Stage 对象而非 stage_id
+6. 修正 get_iteration_summary(): 使用 decisions_made 等字段而非 by_type
+7. 修正 test_search_memories: 使用 store.search() 而非 manager.search_memories()
+8. 修正 test_get_high_priority_memories: 使用 MemoryQuery 而非专用方法
+9. 修正 MemoryQuery: 使用 min_priority 而非 priority
+10. 移除 MemoryQuery.to_dict() 测试 (方法不存在)
+11. 添加 Stage 导入
+
+**运行命令**:
+```bash
+PYTHONPATH=/home/chenjing/AI/aceflow-ai python3 -m pytest tests/workflow/test_memory.py -v
+```
+
+**结果**: ✅ 24 passed in 0.58s
+
 ## ⏳ 待修复的测试文件
-
-### 3. test_engine.py
-**预期问题**:
-- 导入路径: `aceflow.workflow.core.engine`
-- WorkflowEngine API 可能与假设不同
-
-**修复策略**:
-1. 检查 WorkflowEngine 实际 API
-2. 修正导入语句
-3. 调整测试以匹配实际实现
-
-### 4. test_templates.py
-**预期问题**:
-- 导入路径应该正确 (aceflow.workflow.templates)
-- Template, TemplateManager, TemplateRegistry API 需要验证
-
-**修复策略**:
-1. 验证实际模块是否已实现
-2. 如果未实现，需要先实现模板系统
-3. 或者暂时跳过这些测试
-
-### 5. test_memory.py
-**预期问题**:
-- 导入路径应该正确 (aceflow.workflow.memory)
-- Memory, MemoryManager, MemoryStore API 需要验证
-
-**修复策略**:
-1. 验证实际模块是否已实现
-2. 如果未实现，需要先实现记忆系统
-3. 或者暂时跳过这些测试
 
 ### 6. test_mcp_tools.py
 **预期问题**:
 - 导入路径应该正确 (aceflow.workflow.mcp)
-- WorkflowMCPTools, MCPToolResult API 需要验证
+- WorkflowMCPTools API 需要验证
+- 14 个 MCP 工具需要逐一验证
 
 **修复策略**:
 1. 验证实际模块是否已实现
@@ -165,25 +190,28 @@ python3 -m pytest tests/workflow/test_models.py::TestStage::test_stage_creation 
 ## 📊 当前统计
 
 | 测试文件 | 状态 | 通过/总数 | 备注 |
-|---------|------|----------|------|
+|---------|------|----------|------  |
 | test_models.py | ✅ | 13/13 | 完全通过 |
 | test_state.py | ✅ | 11/11 | 完全通过 |
-| test_engine.py | ⏳ | 0/8 | 待修复 |
-| test_templates.py | ⏳ | 0/20 | 待修复 |
-| test_memory.py | ⏳ | 0/24 | 待修复 |
+| test_engine.py | ✅ | 12/12 | 完全通过 |
+| test_templates.py | ✅ | 16/16 | 完全通过 |
+| test_memory.py | ✅ | 24/24 | 完全通过 |
 | test_mcp_tools.py | ⏳ | 0/25 | 待修复 |
 | test_exporter.py | ⏳ | 0/22 | 待修复 |
 | test_integration.py | ⏳ | 0/6 | 待修复 |
-| **总计** | **25%** | **24/129** | **2/8 文件完成** |
+| **总计** | **63%** | **76/129** | **5/8 文件完成** |
 
 ## 🎯 下一步计划
 
 ### 短期目标 (接下来 2-3 小时)
 1. ✅ 修复 test_models.py - **完成**
 2. ✅ 修复 test_state.py - **完成**
-3. ⏳ 修复 test_engine.py
-4. ⏳ 检查并修复 test_templates.py
-5. ⏳ 检查并修复 test_memory.py
+3. ✅ 修复 test_engine.py - **完成**
+4. ✅ 修复 test_templates.py - **完成**
+5. ✅ 修复 test_memory.py - **完成**
+6. ⏳ 修复 test_mcp_tools.py
+7. ⏳ 修复 test_exporter.py
+8. ⏳ 修复 test_integration.py
 
 ### 中期目标 (接下来 1-2 天)
 1. 修复所有单元测试 (test_mcp_tools.py, test_exporter.py)
