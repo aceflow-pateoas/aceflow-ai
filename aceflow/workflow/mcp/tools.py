@@ -14,8 +14,8 @@ from .models import (
     MCPToolParameter,
     MCPToolResult
 )
-from ..engine import WorkflowEngine
-from ..state import StateManager
+from ..core.engine import WorkflowEngine  # 修正: 从 core.engine 导入
+from ..core.state import StateManager     # 修正: 从 core.state 导入
 from ..templates import TemplateManager
 from ..memory import MemoryManager
 from ..gates import GateManager
@@ -441,8 +441,9 @@ class WorkflowMCPTools:
             iteration_id = arguments.get("iteration_id")
             metadata = arguments.get("metadata", {})
 
-            # 创建工作流引擎
-            engine = WorkflowEngine(mode, self.state_manager)
+            # 创建工作流引擎 (使用 project_id 初始化)
+            engine = WorkflowEngine(project_id=self.state_manager.project_id)
+            engine.state_manager = self.state_manager  # 使用共享的 state_manager
 
             # 开始迭代
             iteration = engine.start_iteration(iteration_id, metadata)
@@ -464,13 +465,14 @@ class WorkflowMCPTools:
             iteration_id = arguments["iteration_id"]
             current_stage_output = arguments.get("current_stage_output")
 
-            # 获取迭代
-            iteration = self.state_manager.get_iteration(iteration_id)
+            # 获取当前迭代 (StateManager 只管理当前迭代)
+            iteration = self.state_manager.get_current_iteration()
             if not iteration:
                 return MCPToolResult.error_result(f"未找到迭代: {iteration_id}")
 
-            # 创建引擎
-            engine = WorkflowEngine(iteration.mode, self.state_manager)
+            # 创建引擎 (使用 project_id 初始化)
+            engine = WorkflowEngine(project_id=self.state_manager.project_id)
+            engine.state_manager = self.state_manager  # 使用共享的 state_manager
 
             # 进入下一阶段
             next_stage = engine.advance_to_next_stage(iteration_id)
@@ -513,12 +515,8 @@ class WorkflowMCPTools:
     def _get_current_state(self, arguments: Dict[str, Any]) -> MCPToolResult:
         """获取当前状态"""
         try:
-            iteration_id = arguments.get("iteration_id")
-
-            if iteration_id:
-                iteration = self.state_manager.get_iteration(iteration_id)
-            else:
-                iteration = self.state_manager.get_latest_iteration()
+            # StateManager 只管理当前迭代
+            iteration = self.state_manager.get_current_iteration()
 
             if not iteration:
                 return MCPToolResult.error_result("未找到迭代")
@@ -622,8 +620,8 @@ class WorkflowMCPTools:
             output = arguments["output"]
             mode = arguments["mode"]
 
-            # 获取阶段对象
-            iteration = self.state_manager.get_iteration(iteration_id)
+            # 获取当前迭代和阶段对象 (StateManager 只管理当前迭代)
+            iteration = self.state_manager.get_current_iteration()
             if not iteration:
                 return MCPToolResult.error_result(f"未找到迭代: {iteration_id}")
 

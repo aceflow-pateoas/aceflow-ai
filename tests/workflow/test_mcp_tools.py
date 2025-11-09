@@ -22,19 +22,19 @@ class TestMCPToolModels:
         assert MCPToolCategory.STATE.value == "state"
         assert MCPToolCategory.MEMORY.value == "memory"
         assert MCPToolCategory.TEMPLATE.value == "template"
-        assert MCPToolCategory.EXPORT.value == "export"
+        assert MCPToolCategory.CONTRACT.value == "contract"  # 实际使用 CONTRACT 而非 EXPORT
 
     def test_tool_result_success(self):
         """测试成功的工具结果"""
         result = MCPToolResult(
             success=True,
             data={"iteration_id": "iter_001"},
-            message="迭代创建成功"
+            metadata={"info": "迭代创建成功"}  # 使用 metadata 而非 message
         )
 
         assert result.success is True
         assert result.data['iteration_id'] == "iter_001"
-        assert result.message == "迭代创建成功"
+        assert result.metadata['info'] == "迭代创建成功"
         assert result.error is None
 
     def test_tool_result_failure(self):
@@ -42,7 +42,7 @@ class TestMCPToolModels:
         result = MCPToolResult(
             success=False,
             error="参数验证失败",
-            message="无法创建迭代"
+            metadata={"info": "无法创建迭代"}  # 使用 metadata 而非 message
         )
 
         assert result.success is False
@@ -54,14 +54,14 @@ class TestMCPToolModels:
         result = MCPToolResult(
             success=True,
             data={"key": "value"},
-            message="操作成功"
+            metadata={"info": "操作成功"}  # 使用 metadata 而非 message
         )
 
         data = result.to_dict()
 
         assert data['success'] is True
         assert data['data']['key'] == "value"
-        assert data['message'] == "操作成功"
+        assert data['metadata']['info'] == "操作成功"  # 验证 metadata 而非 message
 
 
 class TestWorkflowMCPTools:
@@ -91,8 +91,10 @@ class TestWorkflowMCPTools:
         tools = mcp_tools.list_tools()
 
         assert len(tools) >= 14  # 应该有至少14个工具
-        assert all('name' in tool for tool in tools)
-        assert all('category' in tool for tool in tools)
+        # list_tools() 返回 MCPTool 对象列表,不是字典
+        assert all(isinstance(tool, type(tools[0])) for tool in tools)
+        assert all(hasattr(tool, 'name') for tool in tools)
+        assert all(hasattr(tool, 'category') for tool in tools)
 
     def test_get_tool_schemas(self, mcp_tools):
         """测试获取工具 schemas"""
