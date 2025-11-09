@@ -37,8 +37,11 @@ class WorkflowMCPTools:
 
         self.working_directory = working_directory
 
-        # 初始化核心组件
-        self.state_manager = StateManager(working_directory / ".aceflow")
+        # 初始化核心组件 (修正: StateManager 需要 project_id 和 state_dir)
+        self.state_manager = StateManager(
+            project_id="mcp_default",
+            state_dir=working_directory / ".aceflow"
+        )
         self.template_manager = TemplateManager()
         self.memory_manager = MemoryManager()
         self.gate_manager = GateManager()
@@ -63,6 +66,9 @@ class WorkflowMCPTools:
 
         # 质量门工具
         self._register_gate_tools()
+
+        # 导出工具 (新增)
+        self._register_export_tools()
 
     # === 工作流管理工具 ===
 
@@ -385,6 +391,121 @@ class WorkflowMCPTools:
             handler=self._record_issue
         )
 
+        # 4. 记录决策 (新增)
+        self.tools["memory_record_decision"] = MCPTool(
+            name="memory_record_decision",
+            description="记录技术决策",
+            category=MCPToolCategory.MEMORY,
+            parameters=[
+                MCPToolParameter(
+                    name="decision",
+                    type="string",
+                    description="决策内容",
+                    required=True
+                ),
+                MCPToolParameter(
+                    name="context",
+                    type="object",
+                    description="决策上下文",
+                    required=False
+                ),
+                MCPToolParameter(
+                    name="iteration_id",
+                    type="string",
+                    description="迭代ID (可选)",
+                    required=False
+                ),
+                MCPToolParameter(
+                    name="stage_id",
+                    type="string",
+                    description="阶段ID (可选)",
+                    required=False
+                )
+            ],
+            handler=self._record_decision
+        )
+
+        # 5. 记录经验教训 (新增)
+        self.tools["memory_record_learning"] = MCPTool(
+            name="memory_record_learning",
+            description="记录经验教训",
+            category=MCPToolCategory.MEMORY,
+            parameters=[
+                MCPToolParameter(
+                    name="learning",
+                    type="string",
+                    description="经验教训内容",
+                    required=True
+                ),
+                MCPToolParameter(
+                    name="category",
+                    type="string",
+                    description="分类 (如技术、流程等)",
+                    required=False
+                ),
+                MCPToolParameter(
+                    name="iteration_id",
+                    type="string",
+                    description="迭代ID (可选)",
+                    required=False
+                )
+            ],
+            handler=self._record_learning
+        )
+
+        # 6. 召回记忆 (新增)
+        self.tools["memory_recall"] = MCPTool(
+            name="memory_recall",
+            description="召回指定条件的记忆",
+            category=MCPToolCategory.MEMORY,
+            parameters=[
+                MCPToolParameter(
+                    name="iteration_id",
+                    type="string",
+                    description="迭代ID",
+                    required=True
+                ),
+                MCPToolParameter(
+                    name="memory_type",
+                    type="string",
+                    description="记忆类型 (可选)",
+                    required=False,
+                    enum=["decision", "issue", "learning", "stage_output"]
+                ),
+                MCPToolParameter(
+                    name="limit",
+                    type="number",
+                    description="返回数量",
+                    required=False,
+                    default=10
+                )
+            ],
+            handler=self._recall_memories
+        )
+
+        # 7. 搜索记忆 (新增)
+        self.tools["memory_search"] = MCPTool(
+            name="memory_search",
+            description="搜索记忆内容",
+            category=MCPToolCategory.MEMORY,
+            parameters=[
+                MCPToolParameter(
+                    name="query",
+                    type="string",
+                    description="搜索关键词",
+                    required=True
+                ),
+                MCPToolParameter(
+                    name="limit",
+                    type="number",
+                    description="返回数量",
+                    required=False,
+                    default=10
+                )
+            ],
+            handler=self._search_memories
+        )
+
     # === 质量门工具 ===
 
     def _register_gate_tools(self):
@@ -430,6 +551,41 @@ class WorkflowMCPTools:
             handler=self._get_gate_info
         )
 
+    # === 导出工具 ===
+
+    def _register_export_tools(self):
+        """注册导出工具 (新增)"""
+
+        # 1. 导出迭代
+        self.tools["export_iteration"] = MCPTool(
+            name="export_iteration",
+            description="导出迭代文档",
+            category=MCPToolCategory.ANALYSIS,  # 使用 ANALYSIS 分类
+            parameters=[
+                MCPToolParameter(
+                    name="iteration_id",
+                    type="string",
+                    description="迭代ID",
+                    required=True
+                ),
+                MCPToolParameter(
+                    name="format",
+                    type="string",
+                    description="导出格式",
+                    required=False,
+                    default="markdown",
+                    enum=["markdown", "html", "json"]
+                ),
+                MCPToolParameter(
+                    name="output_path",
+                    type="string",
+                    description="输出路径",
+                    required=False
+                )
+            ],
+            handler=self._export_iteration
+        )
+
     # === 工具处理函数 (Handlers) ===
 
     # 工作流工具处理函数
@@ -445,15 +601,15 @@ class WorkflowMCPTools:
             engine = WorkflowEngine(project_id=self.state_manager.project_id)
             engine.state_manager = self.state_manager  # 使用共享的 state_manager
 
-            # 开始迭代
-            iteration = engine.start_iteration(iteration_id, metadata)
+            # 开始迭代 (使用 initialize 方法)
+            result = engine.initialize(mode=mode_str, metadata=metadata)
 
             return MCPToolResult.success_result({
-                "iteration_id": iteration.iteration_id,
-                "mode": mode.value,
-                "stages_count": len(iteration.stages),
-                "current_stage": iteration.current_stage.stage_id if iteration.current_stage else None,
-                "message": f"成功开始 {mode.value} 模式迭代"
+                "iteration_id": result['iteration_id'],
+                "mode": result['mode'],
+                "stages_count": result['total_stages'],
+                "current_stage": result['current_stage']['stage_id'] if result.get('current_stage') else None,
+                "message": f"成功开始 {mode_str} 模式迭代"
             })
 
         except Exception as e:
@@ -680,6 +836,97 @@ class WorkflowMCPTools:
         except Exception as e:
             return MCPToolResult.error_result(f"记录问题失败: {str(e)}")
 
+    def _record_decision(self, arguments: Dict[str, Any]) -> MCPToolResult:
+        """记录决策 (新增)"""
+        try:
+            decision = arguments["decision"]
+            context = arguments.get("context", {})
+            iteration_id = arguments.get("iteration_id")
+            stage_id = arguments.get("stage_id")
+
+            memory = self.memory_manager.record_decision(
+                decision, context, iteration_id, stage_id
+            )
+
+            return MCPToolResult.success_result({
+                "memory_id": memory.memory_id,
+                "message": "决策已记录"
+            })
+
+        except Exception as e:
+            return MCPToolResult.error_result(f"记录决策失败: {str(e)}")
+
+    def _record_learning(self, arguments: Dict[str, Any]) -> MCPToolResult:
+        """记录经验教训 (新增)"""
+        try:
+            learning = arguments["learning"]
+            category = arguments.get("category", "general")
+            iteration_id = arguments.get("iteration_id")
+
+            memory = self.memory_manager.record_learning(
+                learning, category, iteration_id
+            )
+
+            return MCPToolResult.success_result({
+                "memory_id": memory.memory_id,
+                "message": "经验教训已记录"
+            })
+
+        except Exception as e:
+            return MCPToolResult.error_result(f"记录经验教训失败: {str(e)}")
+
+    def _recall_memories(self, arguments: Dict[str, Any]) -> MCPToolResult:
+        """召回记忆 (新增)"""
+        try:
+            iteration_id = arguments["iteration_id"]
+            memory_type = arguments.get("memory_type")
+            limit = arguments.get("limit", 10)
+
+            # 使用 MemoryQuery 查询记忆
+            from ..memory.models import MemoryQuery, MemoryType
+
+            types = None
+            if memory_type:
+                type_map = {
+                    "decision": MemoryType.DECISION,
+                    "issue": MemoryType.ISSUE,
+                    "learning": MemoryType.LEARNING,
+                    "stage_output": MemoryType.STAGE_OUTPUT
+                }
+                types = [type_map.get(memory_type)]
+
+            query = MemoryQuery(
+                iteration_id=iteration_id,
+                types=types,
+                limit=limit
+            )
+
+            memories = self.memory_manager.store.query(query)
+
+            return MCPToolResult.success_result({
+                "memories": [m.to_dict() for m in memories],
+                "count": len(memories)
+            })
+
+        except Exception as e:
+            return MCPToolResult.error_result(f"召回记忆失败: {str(e)}")
+
+    def _search_memories(self, arguments: Dict[str, Any]) -> MCPToolResult:
+        """搜索记忆 (新增)"""
+        try:
+            query = arguments["query"]
+            limit = arguments.get("limit", 10)
+
+            memories = self.memory_manager.store.search(query, limit)
+
+            return MCPToolResult.success_result({
+                "memories": [m.to_dict() for m in memories],
+                "count": len(memories)
+            })
+
+        except Exception as e:
+            return MCPToolResult.error_result(f"搜索记忆失败: {str(e)}")
+
     # 质量门工具处理函数
     def _evaluate_gate(self, arguments: Dict[str, Any]) -> MCPToolResult:
         """评估质量门"""
@@ -704,6 +951,47 @@ class WorkflowMCPTools:
 
         except Exception as e:
             return MCPToolResult.error_result(f"获取质量门信息失败: {str(e)}")
+
+    # 导出工具处理函数
+    def _export_iteration(self, arguments: Dict[str, Any]) -> MCPToolResult:
+        """导出迭代 (新增)"""
+        try:
+            from ..exporter import DocumentExporter, ExportFormat, ExportOptions
+
+            iteration_id = arguments["iteration_id"]
+            format_str = arguments.get("format", "markdown")
+            output_path = arguments.get("output_path")
+
+            # 创建导出器
+            exporter = DocumentExporter(
+                state_manager=self.state_manager,
+                memory_manager=self.memory_manager
+            )
+
+            # 转换格式
+            format_map = {
+                "markdown": ExportFormat.MARKDOWN,
+                "html": ExportFormat.HTML,
+                "json": ExportFormat.JSON
+            }
+            export_format = format_map.get(format_str, ExportFormat.MARKDOWN)
+
+            # 导出选项
+            options = ExportOptions(format=export_format)
+            if output_path:
+                options.output_dir = Path(output_path)
+
+            # 执行导出
+            result = exporter.export_iteration(iteration_id, options)
+
+            return MCPToolResult.success_result({
+                "success": result.success,
+                "output_path": str(result.output_path) if result.output_path else None,
+                "message": "导出成功" if result.success else "导出失败"
+            })
+
+        except Exception as e:
+            return MCPToolResult.error_result(f"导出迭代失败: {str(e)}")
 
     # === 工具管理 ===
 
