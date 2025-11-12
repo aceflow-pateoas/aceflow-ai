@@ -21,6 +21,8 @@ from .tools import AceFlowTools
 from .mcp_output_adapter import MCPOutputAdapter
 from .tool_prompts import AceFlowToolPrompts
 from .prompt_generator import AceFlowPromptGenerator
+from .workflow.mcp.tools import WorkflowMCPTools
+from pathlib import Path
 
 # 设置日志到stderr，避免干扰stdio通信
 logging.basicConfig(
@@ -71,6 +73,9 @@ class MCPStdioServer:
         # 传递正确的工作目录给工具实例
         self.tools_instance = AceFlowTools(working_directory=self.execution_context['workingDirectory'])
         self.prompt_generator = AceFlowPromptGenerator()
+
+        # 创建工作流 MCP 工具实例
+        self.workflow_tools = WorkflowMCPTools(working_directory=Path(self.execution_context['workingDirectory']))
         
         # 创建MCP服务器实例
         self.server = Server(self.name)
@@ -194,24 +199,32 @@ class MCPStdioServer:
         async def list_tools() -> List[Tool]:
             """列出可用工具"""
             self.log("📋 收到工具列表请求")
-            
-            # 使用增强的工具定义
-            tool_definitions = AceFlowToolPrompts.get_tool_definitions()
+
             tools = []
-            
+
+            # 1. 添加传统的 Contract-First 工具（4个）
+            tool_definitions = AceFlowToolPrompts.get_tool_definitions()
             for tool_name, tool_def in tool_definitions.items():
                 tools.append(Tool(
                     name=tool_def["name"],
                     description=tool_def["description"],
                     inputSchema=tool_def["inputSchema"]
                 ))
-            
+
+            # 2. 添加 Workflow MCP 工具（21个）
+            workflow_tool_schemas = self.workflow_tools.get_tool_schemas()
+            for schema in workflow_tool_schemas:
+                tools.append(Tool(
+                    name=schema["name"],
+                    description=schema["description"],
+                    inputSchema=schema["inputSchema"]
+                ))
+
             # 添加使用指导信息到日志
-            self.log(f"✅ 返回 {len(tools)} 个增强工具定义")
+            self.log(f"✅ 返回 {len(tools)} 个工具（4个Contract + 21个Workflow）")
             for tool in tools:
                 self.log(f"  - {tool.name}: {tool.description[:50]}...")
-            
-            self.log(f"✅ 返回 {len(tools)} 个工具")
+
             return tools
         
         @self.server.call_tool()
@@ -257,31 +270,45 @@ class MCPStdioServer:
     async def execute_tool(self, tool_name: str, arguments: Dict[str, Any]) -> Dict[str, Any]:
         """执行具体的工具调用"""
         try:
-            if tool_name == "aceflow_init":
-                return self.tools_instance.aceflow_init(
-                    mode=arguments["mode"],
-                    project_name=arguments.get("project_name"),
-                    directory=arguments.get("directory")
-                )
-            elif tool_name == "aceflow_stage":
-                return self.tools_instance.aceflow_stage(
-                    action=arguments["action"],
-                    stage=arguments.get("stage")
-                )
-            elif tool_name == "aceflow_validate":
-                return self.tools_instance.aceflow_validate(
-                    mode=arguments.get("mode", "basic"),
-                    fix=arguments.get("fix", False),
-                    report=arguments.get("report", False)
-                )
-            elif tool_name == "aceflow_template":
-                return self.tools_instance.aceflow_template(
-                    action=arguments["action"],
-                    template=arguments.get("template")
-                )
+            # 1. 检查是否是 Contract-First 工具（传统工具）
+            if tool_name in ["aceflow_init", "aceflow_stage", "aceflow_validate", "aceflow_template"]:
+                if tool_name == "aceflow_init":
+                    return self.tools_instance.aceflow_init(
+                        mode=arguments["mode"],
+                        project_name=arguments.get("project_name"),
+                        directory=arguments.get("directory")
+                    )
+                elif tool_name == "aceflow_stage":
+                    return self.tools_instance.aceflow_stage(
+                        action=arguments["action"],
+                        stage=arguments.get("stage")
+                    )
+                elif tool_name == "aceflow_validate":
+                    return self.tools_instance.aceflow_validate(
+                        mode=arguments.get("mode", "basic"),
+                        fix=arguments.get("fix", False),
+                        report=arguments.get("report", False)
+                    )
+                elif tool_name == "aceflow_template":
+                    return self.tools_instance.aceflow_template(
+                        action=arguments["action"],
+                        template=arguments.get("template")
+                    )
+
+            # 2. 检查是否是 Workflow MCP 工具（新工具）
+            elif tool_name in self.workflow_tools.tools:
+                result = self.workflow_tools.execute_tool(tool_name, arguments)
+                # 转换 MCPToolResult 为标准字典格式
+                return {
+                    "success": result.success,
+                    "content": result.content,
+                    "error": result.error,
+                    "metadata": result.metadata
+                }
+
             else:
                 raise ValueError(f"未知工具: {tool_name}")
-                
+
         except Exception as e:
             logger.error(f"工具执行错误: {tool_name} - {str(e)}", exc_info=True)
             raise

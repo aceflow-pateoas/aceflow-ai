@@ -4,8 +4,8 @@ build-backend = "setuptools.build_meta"
 
 [project]
 name = "aceflow-mcp-server"
-version = "2.2.0"
-description = "AceFlow MCP Server - AI-协作增强版，支持双向AI-MCP数据交换的智能开发工作流服务器，支持HTTP和stdio传输模式"
+version = "3.0.1"
+description = "AceFlow MCP Server - AI-Driven Intelligent Workflow System with Contract-First Development, Memory Management, and 25 MCP Tools (4 Contract + 21 Workflow)"
 readme = "README.md"
 license = {text = "MIT"}
 authors = [
@@ -48,6 +48,7 @@ dependencies = [
     "uvicorn[standard]>=0.24.0",
     "starlette>=0.27.0",
     "requests>=2.28.0",
+    "python-dateutil>=2.8.0",
 ]
 
 [project.optional-dependencies]
