@@ -519,7 +519,7 @@ aceflow init
 
 AI: ✅ 项目初始化成功
      - 配置文件: .aceflow/config.yaml
-     - 工作流模式: minimal (可选: standard, complete, smart)
+     - 工作流模式: standard (可选: complete)
      - MCP 工具: 25 个工具已加载
 ```
 
@@ -554,8 +554,8 @@ curl http://localhost:4010/api/user/list
 
 AI (使用 workflow_start_iteration):
   ✅ 迭代已创建: user-login-v1
-  ✅ 推荐模式: minimal (P→D→R)
-  ✅ 当前阶段: P (规划阶段)
+  ✅ 推荐模式: standard (P1→P2→D1→D2→R1)
+  ✅ 当前阶段: P1 (需求分析)
   ✅ 下一步: 请描述登录功能的需求
 
 你: "需要支持用户名密码登录,返回 JWT Token"
@@ -1077,36 +1077,38 @@ class WorkflowRecommender:
         estimated_days = self.estimate_time(task_description)
         risk_level = self.assess_risk(task_description)
 
-        if estimated_days <= 2 and risk_level == "low":
-            return "minimal"  # P→D→R
-        elif estimated_days <= 7 and risk_level == "medium":
-            return "standard"  # P1→P2→D1→D2→R1
+        if estimated_days <= 7 and risk_level in ["low", "medium"]:
+            return "standard"  # P1→P2→D1→D2→R1 (大多数项目)
         elif estimated_days > 7 or risk_level == "high":
-            return "complete"  # S1-S8 + 质量门
+            return "complete"  # S1-S8 + 质量门 (企业级项目)
         else:
-            return "smart"  # 自适应
+            return "standard"  # 默认推荐标准模式
 ```
 
-**动态阶段调整**:
+**质量门验证**:
 
 ```python
-# Smart 模式可以动态添加/跳过阶段
-class SmartWorkflow:
-    def adjust_stages(self, current_stage: str, progress: dict):
+# Standard/Complete 模式支持质量门和阶段验证
+class WorkflowEngine:
+    def validate_stage_completion(self, current_stage: str, progress: dict):
         """
-        根据项目进展动态调整阶段:
-        - 如果代码质量低,自动添加"代码重构"阶段
-        - 如果测试覆盖率低,自动添加"补充测试"阶段
-        - 如果风险高,自动添加"风险评估"阶段
+        在推进到下一阶段前进行质量检查:
+        - 代码质量检查 (如果质量低,提示改进)
+        - 测试覆盖率检查 (如果覆盖率低,提示补充)
+        - 风险评估检查 (如果风险高,提示风险评估)
         """
+        warnings = []
+
         if progress['code_quality'] < 0.6:
-            self.insert_stage_after(current_stage, "代码重构")
+            warnings.append("⚠️ 代码质量较低,建议进行重构")
 
         if progress['test_coverage'] < 0.8:
-            self.insert_stage_after(current_stage, "补充测试")
+            warnings.append("⚠️ 测试覆盖率不足,建议补充测试")
 
         if progress['risk_score'] > 0.7:
-            self.insert_stage_before(current_stage, "风险评估")
+            warnings.append("⚠️ 风险较高,建议进行风险评估")
+
+        return warnings
 ```
 
 ### 4. 质量门自动评估

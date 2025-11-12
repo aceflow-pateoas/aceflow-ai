@@ -36,13 +36,19 @@ class StateManager:
         # Load existing state
         self._load_state()
 
-    def initialize_iteration(self, mode: WorkflowMode, metadata: Optional[Dict[str, Any]] = None) -> Iteration:
+    def initialize_iteration(self, mode: WorkflowMode, metadata: Optional[Dict[str, Any]] = None,
+                           iteration_id: Optional[str] = None) -> Iteration:
         """Initialize a new workflow iteration"""
         with self._lock:
-            iteration = Iteration(
-                mode=mode,
-                metadata=metadata or {}
-            )
+            # 创建迭代，允许自定义 iteration_id
+            iter_kwargs = {
+                "mode": mode,
+                "metadata": metadata or {}
+            }
+            if iteration_id:
+                iter_kwargs["iteration_id"] = iteration_id
+
+            iteration = Iteration(**iter_kwargs)
 
             # Create stages based on mode (will be populated by mode-specific classes)
             self.current_iteration = iteration

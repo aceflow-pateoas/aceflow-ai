@@ -211,8 +211,8 @@ class TestWorkflowMCPTools:
         )
 
         # 完成一个阶段以产生历史
-        iteration = mcp_tools.state_manager.get_iteration("test_iter_005")
-        if iteration.current_stage:
+        iteration = mcp_tools.state_manager.get_current_iteration()
+        if iteration and iteration.current_stage:
             mcp_tools.execute_tool(
                 "workflow_complete_stage",
                 {

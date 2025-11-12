@@ -25,16 +25,12 @@ class AceFlowToolPrompts:
 - 想要使用AI辅助的项目管理时
 
 📋 **工作流模式说明**:
-- **minimal**: 快速原型模式 - 适合概念验证和快速迭代
-- **standard**: 标准开发模式 - 适合大多数软件项目
-- **complete**: 企业级模式 - 适合大型项目和团队协作
-- **smart**: AI增强模式 - 集成智能分析和自适应流程
+- **standard**: 标准开发模式 - 8个阶段,适合大多数软件项目 (推荐)
+- **complete**: 企业级模式 - 12个阶段,适合大型项目和团队协作
 
 💡 **最佳实践**:
-- 新手建议使用 'standard' 模式
-- 快速原型使用 'minimal' 模式
-- 企业项目使用 'complete' 模式
-- AI项目使用 'smart' 模式
+- 日常开发使用 'standard' 模式 (5-10天项目)
+- 企业项目使用 'complete' 模式 (2周以上项目)
                 """,
                 "inputSchema": {
                     "type": "object",
@@ -42,20 +38,18 @@ class AceFlowToolPrompts:
                         "mode": {
                             "type": "string",
                             "description": "项目工作流模式 - 决定项目的复杂度和功能范围",
-                            "enum": ["minimal", "standard", "complete", "smart"],
+                            "enum": ["standard", "complete"],
                             "enum_descriptions": {
-                                "minimal": "快速原型模式 - 3个阶段，适合概念验证和快速迭代",
                                 "standard": "标准开发模式 - 8个阶段，适合大多数软件项目 (推荐)",
-                                "complete": "企业级模式 - 12个阶段，适合大型项目和团队协作",
-                                "smart": "AI增强模式 - 10个阶段，集成智能分析和自适应流程"
+                                "complete": "企业级模式 - 12个阶段，适合大型项目和团队协作"
                             },
-                            "examples": ["standard", "minimal"],
+                            "examples": ["standard", "complete"],
                             "default": "standard"
                         },
                         "project_name": {
                             "type": "string",
                             "description": "项目名称 - 用于创建项目目录和配置文件 (可选)",
-                            "examples": ["my-web-app", "ai-chatbot", "data-pipeline"]
+                            "examples": ["my-web-app", "api-service", "data-pipeline"]
                         },
                         "directory": {
                             "type": "string",
@@ -74,9 +68,9 @@ class AceFlowToolPrompts:
                         }
                     },
                     {
-                        "scenario": "快速原型开发",
+                        "scenario": "企业级项目开发",
                         "parameters": {
-                            "mode": "minimal",
+                            "mode": "complete",
                             "project_name": "prototype"
                         }
                     }
@@ -268,10 +262,8 @@ class AceFlowToolPrompts:
 - 切换项目模板
 
 📋 **可用模板**:
-- **minimal**: 最小化模板 - 3个阶段，适合快速原型
-- **standard**: 标准模板 - 8个阶段，适合常规项目
+- **standard**: 标准模板 - 8个阶段，适合大多数项目 (推荐)
 - **complete**: 完整模板 - 12个阶段，适合企业级项目
-- **smart**: 智能模板 - 10个阶段，AI增强功能
 
 🔧 **可用操作**:
 - **list**: 列出所有可用模板
@@ -279,9 +271,9 @@ class AceFlowToolPrompts:
 - **validate**: 验证模板配置
 
 💡 **最佳实践**:
-- 根据项目复杂度选择合适模板
+- 日常开发使用 'standard' 模板 (5-10天项目)
+- 企业项目使用 'complete' 模板 (2周以上项目)
 - 在项目初期确定模板类型
-- 定期验证模板配置
                 """,
                 "inputSchema": {
                     "type": "object",
@@ -295,8 +287,8 @@ class AceFlowToolPrompts:
                         "template": {
                             "type": "string",
                             "description": "模板名称 (apply和validate操作需要)",
-                            "enum": ["minimal", "standard", "complete", "smart"],
-                            "examples": ["standard", "minimal"]
+                            "enum": ["standard", "complete"],
+                            "examples": ["standard", "complete"]
                         }
                     },
                     "required": ["action"]
@@ -316,10 +308,10 @@ class AceFlowToolPrompts:
                         }
                     },
                     {
-                        "scenario": "验证智能模板配置",
+                        "scenario": "验证完整模板配置",
                         "parameters": {
                             "action": "validate",
-                            "template": "smart"
+                            "template": "complete"
                         }
                     }
                 ]

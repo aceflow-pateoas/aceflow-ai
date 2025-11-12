@@ -126,7 +126,35 @@ class WorkflowMCPTools:
             handler=self._next_stage
         )
 
-        # 3. 完成迭代
+        # 3. 完成阶段 (新增)
+        self.tools["workflow_complete_stage"] = MCPTool(
+            name="workflow_complete_stage",
+            description="完成当前阶段并进入下一阶段",
+            category=MCPToolCategory.WORKFLOW,
+            parameters=[
+                MCPToolParameter(
+                    name="iteration_id",
+                    type="string",
+                    description="迭代ID",
+                    required=True
+                ),
+                MCPToolParameter(
+                    name="stage_id",
+                    type="string",
+                    description="阶段ID",
+                    required=True
+                ),
+                MCPToolParameter(
+                    name="metadata",
+                    type="object",
+                    description="阶段元数据 (可选)",
+                    required=False
+                )
+            ],
+            handler=self._complete_stage
+        )
+
+        # 4. 完成迭代
         self.tools["workflow_complete_iteration"] = MCPTool(
             name="workflow_complete_iteration",
             description="完成当前迭代",
@@ -186,7 +214,30 @@ class WorkflowMCPTools:
             handler=self._list_iterations
         )
 
-        # 3. 更新阶段状态
+        # 3. 获取状态历史 (新增)
+        self.tools["state_get_history"] = MCPTool(
+            name="state_get_history",
+            description="获取工作流状态转换历史",
+            category=MCPToolCategory.STATE,
+            parameters=[
+                MCPToolParameter(
+                    name="iteration_id",
+                    type="string",
+                    description="迭代ID",
+                    required=True
+                ),
+                MCPToolParameter(
+                    name="limit",
+                    type="number",
+                    description="返回数量限制",
+                    required=False,
+                    default=10
+                )
+            ],
+            handler=self._get_history
+        )
+
+        # 4. 更新阶段状态
         self.tools["state_update_stage"] = MCPTool(
             name="state_update_stage",
             description="更新阶段状态",
@@ -601,14 +652,21 @@ class WorkflowMCPTools:
             engine = WorkflowEngine(project_id=self.state_manager.project_id)
             engine.state_manager = self.state_manager  # 使用共享的 state_manager
 
+            # 注册所有 mode implementations
+            from ..modes import MinimalWorkflow, StandardWorkflow, CompleteWorkflow, SmartWorkflow
+            engine.register_mode_implementation(WorkflowMode.MINIMAL, MinimalWorkflow())
+            engine.register_mode_implementation(WorkflowMode.STANDARD, StandardWorkflow())
+            engine.register_mode_implementation(WorkflowMode.COMPLETE, CompleteWorkflow())
+            engine.register_mode_implementation(WorkflowMode.SMART, SmartWorkflow())
+
             # 开始迭代 (使用 initialize 方法)
-            result = engine.initialize(mode=mode_str, metadata=metadata)
+            result = engine.initialize(mode=mode_str, metadata=metadata, iteration_id=iteration_id)
 
             return MCPToolResult.success_result({
                 "iteration_id": result['iteration_id'],
                 "mode": result['mode'],
                 "stages_count": result['total_stages'],
-                "current_stage": result['current_stage']['stage_id'] if result.get('current_stage') else None,
+                "current_stage": result.get('current_stage'),  # 返回完整的 current_stage 字典
                 "message": f"成功开始 {mode_str} 模式迭代"
             })
 
@@ -626,28 +684,71 @@ class WorkflowMCPTools:
             if not iteration:
                 return MCPToolResult.error_result(f"未找到迭代: {iteration_id}")
 
-            # 创建引擎 (使用 project_id 初始化)
-            engine = WorkflowEngine(project_id=self.state_manager.project_id)
-            engine.state_manager = self.state_manager  # 使用共享的 state_manager
+            # 记录当前阶段输出到元数据
+            metadata = {}
+            if current_stage_output:
+                metadata["stage_output"] = current_stage_output
 
-            # 进入下一阶段
-            next_stage = engine.advance_to_next_stage(iteration_id)
+            # 前进到下一阶段
+            success = self.state_manager.advance_stage(metadata)
 
-            if not next_stage:
+            if not success:
+                return MCPToolResult.success_result({
+                    "message": "所有阶段已完成",
+                    "iteration_completed": True
+                })
+
+            # 获取新的当前阶段
+            new_iteration = self.state_manager.get_current_iteration()
+            current_stage = new_iteration.current_stage if new_iteration else None
+
+            if not current_stage:
                 return MCPToolResult.success_result({
                     "message": "所有阶段已完成",
                     "iteration_completed": True
                 })
 
             return MCPToolResult.success_result({
-                "current_stage": next_stage.stage_id,
-                "stage_name": next_stage.name,
+                "stage_id": current_stage.stage_id,  # 添加 stage_id 字段
+                "current_stage": current_stage.stage_id,
+                "stage_name": current_stage.name,
                 "iteration_completed": False,
-                "message": f"已进入阶段: {next_stage.name}"
+                "message": f"已进入阶段: {current_stage.name}"
             })
 
         except Exception as e:
             return MCPToolResult.error_result(f"进入下一阶段失败: {str(e)}")
+
+    def _complete_stage(self, arguments: Dict[str, Any]) -> MCPToolResult:
+        """完成当前阶段 (新增)"""
+        try:
+            iteration_id = arguments["iteration_id"]
+            stage_id = arguments["stage_id"]
+            metadata = arguments.get("metadata", {})
+
+            # 验证当前阶段
+            iteration = self.state_manager.get_current_iteration()
+            if not iteration:
+                return MCPToolResult.error_result(f"未找到迭代: {iteration_id}")
+
+            if not iteration.current_stage or iteration.current_stage.stage_id != stage_id:
+                return MCPToolResult.error_result(
+                    f"阶段 {stage_id} 不是当前阶段 (当前: {iteration.current_stage.stage_id if iteration.current_stage else 'None'})"
+                )
+
+            # 前进到下一阶段
+            success = self.state_manager.advance_stage(metadata)
+
+            if success:
+                return MCPToolResult.success_result({
+                    "stage_id": stage_id,
+                    "message": f"阶段 {stage_id} 已完成"
+                })
+            else:
+                return MCPToolResult.error_result("完成阶段失败")
+
+        except Exception as e:
+            return MCPToolResult.error_result(f"完成阶段失败: {str(e)}")
 
     def _complete_iteration(self, arguments: Dict[str, Any]) -> MCPToolResult:
         """完成迭代"""
@@ -677,7 +778,18 @@ class WorkflowMCPTools:
             if not iteration:
                 return MCPToolResult.error_result("未找到迭代")
 
-            return MCPToolResult.success_result(iteration.to_dict())
+            # 使用 to_dict() 并添加额外的字段
+            data = iteration.to_dict()
+
+            # 添加 progress 字段（整体进度）
+            if 'overall_progress' in data:
+                data['progress'] = data['overall_progress']
+
+            # 添加单独的 current_stage 字段（完整对象）
+            if iteration.current_stage:
+                data['current_stage'] = iteration.current_stage.to_dict()
+
+            return MCPToolResult.success_result(data)
 
         except Exception as e:
             return MCPToolResult.error_result(f"获取状态失败: {str(e)}")
@@ -695,6 +807,23 @@ class WorkflowMCPTools:
 
         except Exception as e:
             return MCPToolResult.error_result(f"列出迭代失败: {str(e)}")
+
+    def _get_history(self, arguments: Dict[str, Any]) -> MCPToolResult:
+        """获取状态转换历史 (新增)"""
+        try:
+            iteration_id = arguments["iteration_id"]
+            limit = arguments.get("limit", 10)
+
+            # 获取转换历史
+            transitions = self.state_manager.get_transition_history(limit)
+
+            return MCPToolResult.success_result({
+                "transitions": transitions,
+                "count": len(transitions)
+            })
+
+        except Exception as e:
+            return MCPToolResult.error_result(f"获取历史失败: {str(e)}")
 
     def _update_stage_status(self, arguments: Dict[str, Any]) -> MCPToolResult:
         """更新阶段状态"""
@@ -987,6 +1116,7 @@ class WorkflowMCPTools:
             return MCPToolResult.success_result({
                 "success": result.success,
                 "output_path": str(result.output_path) if result.output_path else None,
+                "files_created": [str(f) for f in result.files_created] if result.files_created else [],
                 "message": "导出成功" if result.success else "导出失败"
             })
 
@@ -1009,7 +1139,7 @@ class WorkflowMCPTools:
         # 查找工具
         tool = self.tools.get(tool_name)
         if not tool:
-            return MCPToolResult.error_result(f"未知工具: {tool_name}")
+            return MCPToolResult.error_result(f"未找到工具: {tool_name}")  # 修改为"未找到"
 
         # 验证参数
         validation_errors = tool.validate_arguments(arguments)
@@ -1049,3 +1179,33 @@ class WorkflowMCPTools:
             MCP schema 列表
         """
         return [tool.to_mcp_schema() for tool in self.tools.values()]
+
+    def get_tool_info(self, tool_name: str) -> Optional[Dict[str, Any]]:
+        """
+        获取工具信息
+
+        Args:
+            tool_name: 工具名称
+
+        Returns:
+            工具信息字典，如果不存在返回 None
+        """
+        tool = self.tools.get(tool_name)
+        if not tool:
+            return None
+
+        return {
+            "name": tool.name,
+            "description": tool.description,
+            "category": tool.category.value,
+            "parameters": [
+                {
+                    "name": p.name,
+                    "type": p.type,
+                    "description": p.description,
+                    "required": p.required,
+                    "default": p.default
+                }
+                for p in tool.parameters
+            ]
+        }

@@ -28,6 +28,14 @@ class StageStatus(Enum):
     FAILED = "failed"
 
 
+class IterationStatus(Enum):
+    """Iteration execution status"""
+    PENDING = "pending"
+    IN_PROGRESS = "in_progress"
+    COMPLETED = "completed"
+    FAILED = "failed"
+
+
 @dataclass
 class Stage:
     """Represents a workflow stage"""
@@ -85,6 +93,7 @@ class Iteration:
     """Represents a workflow iteration"""
     iteration_id: str = field(default_factory=lambda: f"iter_{uuid.uuid4().hex[:8]}")
     mode: WorkflowMode = WorkflowMode.SMART
+    status: IterationStatus = IterationStatus.IN_PROGRESS
     stages: List[Stage] = field(default_factory=list)
     current_stage_index: int = 0
     created_at: datetime = field(default_factory=datetime.now)
@@ -118,6 +127,7 @@ class Iteration:
         return {
             'iteration_id': self.iteration_id,
             'mode': self.mode.value,
+            'status': self.status.value,
             'stages': [stage.to_dict() for stage in self.stages],
             'current_stage_index': self.current_stage_index,
             'current_stage_id': self.current_stage.stage_id if self.current_stage else None,
@@ -133,6 +143,7 @@ class Iteration:
         iteration = cls(
             iteration_id=data.get('iteration_id'),
             mode=WorkflowMode(data.get('mode', 'smart')),
+            status=IterationStatus(data.get('status', 'in_progress')),
             current_stage_index=data.get('current_stage_index', 0),
             created_at=datetime.fromisoformat(data['created_at']) if 'created_at' in data else datetime.now(),
             updated_at=datetime.fromisoformat(data['updated_at']) if 'updated_at' in data else datetime.now(),

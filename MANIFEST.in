@@ -1,0 +1,27 @@
+include README.md
+include README_CN.md
+include LICENSE
+include CHANGELOG.md
+include pyproject.toml
+include setup.cfg
+
+# Include documentation
+recursive-include docs *.md
+recursive-include docs *.txt
+
+# Include templates
+recursive-include aceflow/templates *.md
+recursive-include aceflow/templates *.txt
+recursive-include aceflow/templates *.yaml
+recursive-include aceflow/templates *.json
+
+# Include tests (for users who want to run tests)
+recursive-include tests *.py
+
+# Exclude unnecessary files
+recursive-exclude * __pycache__
+recursive-exclude * *.py[co]
+recursive-exclude * .DS_Store
+recursive-exclude * .git*
+recursive-exclude aceflow-mcp-server *
+exclude .gitignore

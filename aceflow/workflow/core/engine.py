@@ -20,13 +20,15 @@ class WorkflowEngine:
         self.state_manager = StateManager(project_id)
         self._mode_implementations = {}  # Will be registered by mode classes
 
-    def initialize(self, mode: str, metadata: Optional[Dict[str, Any]] = None) -> Dict[str, Any]:
+    def initialize(self, mode: str, metadata: Optional[Dict[str, Any]] = None,
+                  iteration_id: Optional[str] = None) -> Dict[str, Any]:
         """
         Initialize a new workflow iteration
 
         Args:
             mode: Workflow mode ('minimal', 'standard', 'complete', 'smart')
             metadata: Optional metadata for the iteration
+            iteration_id: Optional custom iteration ID
 
         Returns:
             Dict containing iteration information
@@ -40,7 +42,7 @@ class WorkflowEngine:
             raise ValueError(f"No implementation found for mode: {mode}")
 
         # Initialize iteration with empty stages
-        iteration = self.state_manager.initialize_iteration(workflow_mode, metadata)
+        iteration = self.state_manager.initialize_iteration(workflow_mode, metadata, iteration_id)
 
         # Let mode implementation create its stages
         stages = mode_impl.create_stages()

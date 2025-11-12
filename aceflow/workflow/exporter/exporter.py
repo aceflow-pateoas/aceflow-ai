@@ -47,8 +47,8 @@ class DocumentExporter:
             options = ExportOptions()
 
         # 获���迭代数据
-        iteration = self.state_manager.get_iteration(iteration_id)
-        if not iteration:
+        iteration = self.state_manager.get_current_iteration()
+        if not iteration or iteration.iteration_id != iteration_id:
             return ExportResult(
                 success=False,
                 error=f"未找到迭代: {iteration_id}"
@@ -76,67 +76,6 @@ class DocumentExporter:
                 error=f"导出失败: {str(e)}"
             )
 
-    def export_all_iterations(self, options: Optional[ExportOptions] = None) -> ExportResult:
-        """
-        导出所有迭代
-
-        Args:
-            options: 导出选项
-
-        Returns:
-            导出结果
-        """
-        if options is None:
-            options = ExportOptions()
-
-        iterations = self.state_manager.list_iterations()
-
-        if not iterations:
-            return ExportResult(
-                success=False,
-                error="没有可导出的迭代"
-            )
-
-        # 确定输出目录
-        output_dir = options.output_dir or Path.cwd() / "aceflow_exports"
-        output_dir.mkdir(parents=True, exist_ok=True)
-
-        all_files = []
-        errors = []
-
-        # 导出每个迭代
-        for iteration in iterations:
-            iter_options = ExportOptions(
-                format=options.format,
-                output_dir=output_dir / iteration.iteration_id,
-                **{k: v for k, v in options.__dict__.items()
-                   if k not in ['format', 'output_dir']}
-            )
-
-            result = self.export_iteration(iteration.iteration_id, iter_options)
-
-            if result.success:
-                all_files.extend(result.files_created)
-            else:
-                errors.append(f"{iteration.iteration_id}: {result.error}")
-
-        # 创建总索引
-        if options.create_index:
-            index_file = self._create_index(iterations, output_dir, options.format)
-            all_files.append(index_file)
-
-        return ExportResult(
-            success=len(errors) == 0,
-            output_path=output_dir,
-            files_created=all_files,
-            error="; ".join(errors) if errors else None,
-            metadata={
-                'total_iterations': len(iterations),
-                'successful_exports': len(iterations) - len(errors),
-                'failed_exports': len(errors)
-            }
-        )
-
     # === Markdown 导出 ===
 
     def _export_markdown(self, iteration: Iteration, options: ExportOptions) -> ExportResult:
@@ -152,6 +91,14 @@ class DocumentExporter:
             content = self._generate_markdown_single(iteration, options)
             output_file.write_text(content, encoding='utf-8')
             files_created.append(output_file)
+
+            # 单文件模式返回文件路径
+            return ExportResult(
+                success=True,
+                output_path=output_file,
+                files_created=files_created,
+                metadata={'format': 'markdown'}
+            )
 
         else:
             # 多文件模式
@@ -178,12 +125,13 @@ class DocumentExporter:
                 memories_file.write_text(memories_content, encoding='utf-8')
                 files_created.append(memories_file)
 
-        return ExportResult(
-            success=True,
-            output_path=output_dir,
-            files_created=files_created,
-            metadata={'format': 'markdown'}
-        )
+            # 多文件模式返回目录路径
+            return ExportResult(
+                success=True,
+                output_path=output_dir,
+                files_created=files_created,
+                metadata={'format': 'markdown'}
+            )
 
     def _generate_markdown_single(self, iteration: Iteration, options: ExportOptions) -> str:
         """生成单文件 Markdown"""
@@ -380,7 +328,7 @@ class DocumentExporter:
 
         return ExportResult(
             success=True,
-            output_path=output_dir,
+            output_path=output_file,
             files_created=[output_file],
             metadata={'format': 'json'}
         )
@@ -433,7 +381,7 @@ class DocumentExporter:
 
         return ExportResult(
             success=True,
-            output_path=output_dir,
+            output_path=html_file,
             files_created=[html_file],
             metadata={'format': 'html'}
         )
@@ -475,25 +423,3 @@ class DocumentExporter:
         )
 
     # === 工具方法 ===
-
-    def _create_index(self, iterations: List[Iteration], output_dir: Path,
-                     export_format: ExportFormat) -> Path:
-        """创建总索引文件"""
-        index_file = output_dir / "INDEX.md"
-
-        lines = []
-        lines.append("# AceFlow 导出索引\n")
-        lines.append(f"导出时间: {datetime.now().strftime('%Y-%m-%d %H:%M:%S')}\n")
-        lines.append(f"总迭代数: {len(iterations)}\n")
-
-        lines.append("## 迭代列表\n")
-
-        for iteration in sorted(iterations, key=lambda x: x.created_at, reverse=True):
-            lines.append(f"### [{iteration.iteration_id}]({iteration.iteration_id}/README.md)")
-            lines.append(f"- **模式**: {iteration.mode.value}")
-            lines.append(f"- **状态**: {iteration.status.value}")
-            lines.append(f"- **创建时间**: {iteration.created_at.strftime('%Y-%m-%d %H:%M:%S')}")
-            lines.append("")
-
-        index_file.write_text("\n".join(lines), encoding='utf-8')
-        return index_file

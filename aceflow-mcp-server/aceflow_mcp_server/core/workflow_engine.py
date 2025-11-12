@@ -18,10 +18,8 @@ class StageStatus(str, Enum):
 
 class WorkflowMode(str, Enum):
     """Workflow mode types."""
-    MINIMAL = "minimal"
     STANDARD = "standard"
     COMPLETE = "complete"
-    SMART = "smart"
 
 
 class WorkflowEngine:
@@ -29,11 +27,6 @@ class WorkflowEngine:
 
     # Stage definitions for different modes
     STAGE_DEFINITIONS = {
-        WorkflowMode.MINIMAL: [
-            "implementation",
-            "test",
-            "demo"
-        ],
         WorkflowMode.STANDARD: [
             "user_stories",
             "task_breakdown",
@@ -56,18 +49,6 @@ class WorkflowEngine:
             "performance_test",
             "security_review",
             "code_review",
-            "demo"
-        ],
-        WorkflowMode.SMART: [
-            "requirement_analysis",
-            "task_breakdown",
-            "ai_assisted_design",
-            "implementation",
-            "ai_code_review",
-            "test_generation",
-            "integration_test",
-            "performance_analysis",
-            "security_scan",
             "demo"
         ]
     }

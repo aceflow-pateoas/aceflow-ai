@@ -6,17 +6,15 @@
 
 | 概念 | 说明 | 可选值 | 使用工具 |
 |-----|------|--------|---------|
-| **模板 (Template)** | 项目的整体工作流模式,决定项目复杂度 | `minimal`, `standard`, `complete`, `smart` | `aceflow_init`, `aceflow_template` |
+| **模板 (Template)** | 项目的整体工作流模式,决定项目复杂度 | `standard`, `complete` | `aceflow_init`, `aceflow_template` |
 | **阶段 (Stage)** | 项目开发的具体步骤,按顺序执行 | `user_stories`, `task_breakdown`, `test_design`, 等 | `aceflow_stage` |
 
-### 2. 工作流模板说明
+### 2. 工作流模板说明 (简化后)
 
-| 模板 | 阶段数 | 适用场景 | 示例 |
+| 模板 | 阶段数 | 适用场景 | 周期 |
 |-----|--------|---------|------|
-| **minimal** | 3个阶段 | 快速原型、概念验证 | POC项目、技术验证 |
-| **standard** | 8个阶段 | 常规软件项目 | Web应用、API服务 (推荐) |
-| **complete** | 12个阶段 | 企业级项目、团队协作 | 大型系统、多团队项目 |
-| **smart** | 10个阶段 | AI增强项目 | AI应用、智能系统 |
+| **standard** | 8个阶段 | 大多数软件项目 | 5-10天 (推荐) |
+| **complete** | 12个阶段 | 企业级项目、大型系统 | 2周以上 |
 
 ### 3. Standard模板的8个阶段
 
@@ -29,6 +27,23 @@
 6. integration_test → 集成测试
 7. code_review      → 代码审查
 8. demo             → 功能演示
+```
+
+### 4. Complete模板的12个阶段
+
+```
+1. requirement_analysis  → 需求分析
+2. architecture_design   → 架构设计
+3. user_stories          → 用户故事分析
+4. task_breakdown        → 任务分解
+5. test_design           → 测试用例设计
+6. implementation        → 功能实现
+7. unit_test             → 单元测试
+8. integration_test      → 集成测试
+9. performance_test      → 性能测试
+10. security_review      → 安全审查
+11. code_review          → 代码审查
+12. demo                 → 功能演示
 ```
 
 ---
@@ -91,7 +106,7 @@
 {
   "tool": "aceflow_template",
   "parameters": {
-    "action": "list"  // 列出所有模板 (minimal, standard, complete, smart)
+    "action": "list"  // 列出所有模板 (standard, complete)
   }
 }
 
@@ -131,7 +146,7 @@
   "tool": "aceflow_template",
   "parameters": {
     "action": "apply",
-    "template": "standard"  // ✅ 正确,使用4种模板之一
+    "template": "standard"  // ✅ 正确,使用2种模板之一
   }
 }
 ```
@@ -323,7 +338,7 @@
 {
   "tool": "aceflow_init",
   "parameters": {
-    "mode": "standard",              // 必需: minimal | standard | complete | smart
+    "mode": "standard",              // 必需: standard | complete
     "project_name": "my-project",    // 可选: 项目名称
     "directory": "./path/to/project" // 可选: 项目目录
   }
@@ -366,7 +381,7 @@
   "tool": "aceflow_template",
   "parameters": {
     "action": "apply",
-    "template": "standard"  // minimal | standard | complete | smart
+    "template": "standard"  // standard | complete
   }
 }
 
@@ -465,11 +480,11 @@
 ## 🚨 重要提醒
 
 1. **模板和阶段是完全不同的概念**
-   - 模板 = 工作流整体模式 (minimal, standard, complete, smart)
+   - 模板 = 工作流整体模式 (standard, complete)
    - 阶段 = 工作流具体步骤 (user_stories, task_breakdown, etc.)
 
 2. **不要混用参数**
-   - `aceflow_template` 的 `template` 参数只接受 4 种模板
+   - `aceflow_template` 的 `template` 参数只接受 2 种模板
    - `aceflow_stage` 返回的 `current_stage` 是阶段名,不是模板名
 
 3. **正常的工作流程**

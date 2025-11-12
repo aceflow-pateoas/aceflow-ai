@@ -12,6 +12,7 @@
 
 | 文档 | 说明 | 适用对象 |
 |-----|------|---------|
+| [**Workflow Quick Start**](./WORKFLOW_QUICK_START.md) | **10分钟上手工作流系统** | **新用户** ⭐ |
 | [Quick Start Guide](./QUICK_START_GUIDE.md) | 5分钟快速上手 | 新用户 |
 | [Internal Network Deployment](./INTERNAL_NETWORK_DEPLOYMENT_GUIDE.md) | 内网部署指南（VSCode + Cline + Qwen） | 企业用户 |
 | [Cline MCP Configuration](./CLINE_MCP_CONFIGURATION.md) | Cline 配置详解 | Cline 用户 |
@@ -30,6 +31,8 @@
 
 | 文档 | 说明 | 状态 |
 |-----|------|------|
+| [**Workflow API Reference**](./WORKFLOW_API_REFERENCE.md) | **API 参考文档 (完整)** | ✅ **最新** |
+| [**Workflow Testing Report**](./WORKFLOW_TESTING_REPORT.md) | **测试报告 (126通过/8跳过)** | ✅ **最新** |
 | [Workflow State Machine Design](./WORKFLOW_STATE_MACHINE_DESIGN.md) | 状态机设计 | ✅ 已实现 |
 | [Workflow State Management Guide](./WORKFLOW_STATE_MANAGEMENT_GUIDE.md) | 状态管理指南 | ✅ 已实现 |
 | [Workflow State Tracking Correction](./WORKFLOW_STATE_TRACKING_CORRECTION.md) | 状态追踪更正说明 | 📝 重要 |
@@ -89,7 +92,7 @@
 ## 🎯 推荐阅读路径
 
 ### 新用户（5分钟入门）
-1. [Quick Start Guide](./QUICK_START_GUIDE.md)
+1. [**Workflow Quick Start**](./WORKFLOW_QUICK_START.md) ⭐ 推荐
 2. [MCP Tools Quick Reference](./MCP_TOOLS_QUICK_REFERENCE.md)
 3. [AceFlow Workflow Validation Report](./ACEFLOW_WORKFLOW_VALIDATION_REPORT.md)
 
@@ -99,10 +102,12 @@
 3. [MCP Tools Complete Catalog](./MCP_TOOLS_COMPLETE_CATALOG.md)
 
 ### 开发者（深入了解）
-1. [MCP Tools Complete Catalog](./MCP_TOOLS_COMPLETE_CATALOG.md)
-2. [Workflow State Machine Design](./WORKFLOW_STATE_MACHINE_DESIGN.md)
-3. [Frontend-Backend Collaboration Final Design](./FRONTEND_BACKEND_COLLABORATION_FINAL_DESIGN.md)
-4. [MCP Tools Testing Guide](./MCP_TOOLS_TESTING_GUIDE.md)
+1. [**Workflow API Reference**](./WORKFLOW_API_REFERENCE.md) ⭐ 新增
+2. [MCP Tools Complete Catalog](./MCP_TOOLS_COMPLETE_CATALOG.md)
+3. [Workflow State Machine Design](./WORKFLOW_STATE_MACHINE_DESIGN.md)
+4. [Frontend-Backend Collaboration Final Design](./FRONTEND_BACKEND_COLLABORATION_FINAL_DESIGN.md)
+5. [MCP Tools Testing Guide](./MCP_TOOLS_TESTING_GUIDE.md)
+6. [Workflow Testing Report](./WORKFLOW_TESTING_REPORT.md) ⭐ 新增
 
 ### 团队负责人（项目规划）
 1. [MVP Development Plan](./MVP_DEVELOPMENT_PLAN.md)
@@ -113,8 +118,12 @@
 
 ## 📊 文档统计
 
-- **总文档数**: 35 个
-- **新增文档** (2025-01-06): 6 个
+- **总文档数**: 38 个 (+3)
+- **新增文档** (2025-11-09): 3 个
+  - ⭐ WORKFLOW_QUICK_START.md (快速入门指南)
+  - ⭐ WORKFLOW_API_REFERENCE.md (API 参考文档)
+  - ⭐ WORKFLOW_TESTING_REPORT.md (测试报告)
+- **历史文档** (2025-01-06): 6 个
   - MCP_TOOLS_COMPLETE_CATALOG.md
   - MCP_TOOLS_QUICK_REFERENCE.md
   - MCP_TOOLS_TESTING_GUIDE.md
@@ -133,4 +142,4 @@
 ---
 
 **维护者**: AceFlow Team
-**最后更新**: 2025-01-06
+**最后更新**: 2025-11-09

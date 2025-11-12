@@ -269,20 +269,20 @@ class AceFlowTools:
         directory: Optional[str] = None
     ) -> Dict[str, Any]:
         """Initialize AceFlow project with specified mode.
-        
+
         Args:
-            mode: Workflow mode (minimal, standard, complete, smart)
+            mode: Workflow mode (standard, complete)
             project_name: Optional project name
             directory: 项目目录的完整路径。强烈建议明确指定以确保文件创建在正确位置。
                       示例: "C:\\Users\\YourName\\your-project" 或 "/path/to/your/project"
                       提示：如果使用Cline等AI助手，请确保提供当前打开项目的完整路径
-        
+
         Returns:
             Dict with success status, message, and project info
         """
         try:
             # Validate mode
-            valid_modes = ["minimal", "standard", "complete", "smart"]
+            valid_modes = ["standard", "complete"]
             if mode not in valid_modes:
                 return {
                     "success": False,
@@ -437,10 +437,8 @@ class AceFlowTools:
     def _get_stage_count(self, mode: str) -> int:
         """Get the number of stages for the given mode."""
         stage_counts = {
-            "minimal": 3,
             "standard": 8,
-            "complete": 12,
-            "smart": 10
+            "complete": 12
         }
         return stage_counts.get(mode, 8)
     
@@ -481,28 +479,6 @@ AceFlow模式: {mode}
     def _generate_template_yaml(self, mode: str) -> str:
         """Generate template.yaml content based on mode."""
         templates = {
-            "minimal": """# AceFlow Minimal模式配置
-name: "Minimal Workflow"
-version: "3.0"
-description: "快速原型和概念验证工作流"
-
-stages:
-  - name: "implementation"
-    description: "快速实现核心功能"
-    required: true
-  - name: "test"
-    description: "基础功能测试"
-    required: true
-  - name: "demo"
-    description: "功能演示"
-    required: true
-
-quality_gates:
-  - stage: "implementation"
-    criteria: ["核心功能完成", "基本可运行"]
-  - stage: "test"
-    criteria: ["主要功能测试通过"]""",
-            
             "standard": """# AceFlow Standard模式配置
 name: "Standard Workflow"
 version: "3.0"
@@ -541,8 +517,8 @@ quality_gates:
     criteria: ["代码质量合格", "功能完整"]
   - stage: "unit_test"
     criteria: ["测试覆盖率 > 80%", "所有测试通过"]""",
-            
-            "complete": """# AceFlow Complete模式配置  
+
+            "complete": """# AceFlow Complete模式配置
 name: "Complete Workflow"
 version: "3.0"
 description: "完整企业级开发工作流"
@@ -591,58 +567,9 @@ quality_gates:
   - stage: "implementation"
     criteria: ["代码质量优秀", "性能满足要求"]
   - stage: "security_review"
-    criteria: ["安全检查通过", "无重大漏洞"]""",
-            
-            "smart": """# AceFlow Smart模式配置
-name: "Smart Adaptive Workflow"  
-version: "3.0"
-description: "AI增强的自适应工作流"
-
-stages:
-  - name: "project_analysis"
-    description: "AI项目复杂度分析"
-    required: true
-  - name: "adaptive_planning"
-    description: "自适应规划"
-    required: true
-  - name: "user_stories"
-    description: "用户故事分析"
-    required: true
-  - name: "smart_breakdown"
-    description: "智能任务分解"
-    required: true
-  - name: "test_generation"
-    description: "AI测试用例生成"
-    required: true
-  - name: "implementation"
-    description: "功能实现"
-    required: true
-  - name: "automated_test"
-    description: "自动化测试"
-    required: true
-  - name: "quality_assessment"
-    description: "AI质量评估"
-    required: true
-  - name: "optimization"
-    description: "性能优化"
-    required: true
-  - name: "demo"
-    description: "智能演示"
-    required: true
-
-ai_features:
-  - "复杂度智能评估"
-  - "动态流程调整"
-  - "自动化测试生成"
-  - "质量智能分析"
-
-quality_gates:
-  - stage: "project_analysis"
-    criteria: ["复杂度评估完成", "技术栈确定"]
-  - stage: "implementation"
-    criteria: ["AI代码质量检查通过", "性能指标达标"]"""
+    criteria: ["安全检查通过", "无重大漏洞"]"""
         }
-        
+
         return templates.get(mode, templates["standard"])
     
     def _generate_readme(self, project_name: str, mode: str) -> str:
@@ -981,10 +908,6 @@ curl -X POST http://localhost:8000/mcp \\
     def _get_stage_description(self, mode: str) -> str:
         """Get stage descriptions for the mode."""
         descriptions = {
-            "minimal": """1. **Implementation** - 快速实现核心功能
-2. **Test** - 基础功能测试  
-3. **Demo** - 功能演示""",
-            
             "standard": """1. **User Stories** - 用户故事分析
 2. **Task Breakdown** - 任务分解
 3. **Test Design** - 测试用例设计
@@ -993,7 +916,7 @@ curl -X POST http://localhost:8000/mcp \\
 6. **Integration Test** - 集成测试
 7. **Code Review** - 代码审查
 8. **Demo** - 功能演示""",
-            
+
             "complete": """1. **Requirement Analysis** - 需求分析
 2. **Architecture Design** - 架构设计
 3. **User Stories** - 用户故事分析
@@ -1005,20 +928,9 @@ curl -X POST http://localhost:8000/mcp \\
 9. **Performance Test** - 性能测试
 10. **Security Review** - 安全审查
 11. **Code Review** - 代码审查
-12. **Demo** - 功能演示""",
-            
-            "smart": """1. **Project Analysis** - AI项目复杂度分析
-2. **Adaptive Planning** - 自适应规划
-3. **User Stories** - 用户故事分析
-4. **Smart Breakdown** - 智能任务分解
-5. **Test Generation** - AI测试用例生成
-6. **Implementation** - 功能实现
-7. **Automated Test** - 自动化测试
-8. **Quality Assessment** - AI质量评估
-9. **Optimization** - 性能优化
-10. **Demo** - 智能演示"""
+12. **Demo** - 功能演示"""
         }
-        
+
         return descriptions.get(mode, descriptions["standard"])
     
     def aceflow_stage(

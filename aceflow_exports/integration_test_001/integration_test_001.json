@@ -1,0 +1,287 @@
+{
+  "iteration_id": "integration_test_001",
+  "mode": "minimal",
+  "status": "in_progress",
+  "stages": [
+    {
+      "stage_id": "P",
+      "name": "Planning",
+      "description": "Quick requirements and design",
+      "status": "completed",
+      "progress": 1.0,
+      "start_time": "2025-11-09T16:42:07.735553",
+      "end_time": "2025-11-09T16:42:07.739864",
+      "tasks": [
+        "Define core functionality",
+        "Sketch basic architecture",
+        "List main tasks"
+      ],
+      "deliverables": [
+        "Quick requirements doc",
+        "Basic design notes"
+      ],
+      "metadata": {},
+      "created_at": "2025-11-09T16:42:07.735540",
+      "updated_at": "2025-11-09T16:42:07.735544"
+    },
+    {
+      "stage_id": "D",
+      "name": "Development",
+      "description": "Rapid implementation",
+      "status": "completed",
+      "progress": 1.0,
+      "start_time": "2025-11-09T16:42:07.739874",
+      "end_time": "2025-11-09T16:42:07.740339",
+      "tasks": [
+        "Implement core features",
+        "Basic testing",
+        "Fix critical issues"
+      ],
+      "deliverables": [
+        "Working code",
+        "Basic tests"
+      ],
+      "metadata": {},
+      "created_at": "2025-11-09T16:42:07.735547",
+      "updated_at": "2025-11-09T16:42:07.735548"
+    },
+    {
+      "stage_id": "R",
+      "name": "Review",
+      "description": "Quick review and deploy",
+      "status": "in_progress",
+      "progress": 0.0,
+      "start_time": "2025-11-09T16:42:07.740344",
+      "end_time": null,
+      "tasks": [
+        "Code review",
+        "Smoke testing",
+        "Deploy/deliver"
+      ],
+      "deliverables": [
+        "Deployed code",
+        "Release notes"
+      ],
+      "metadata": {},
+      "created_at": "2025-11-09T16:42:07.735549",
+      "updated_at": "2025-11-09T16:42:07.735550"
+    }
+  ],
+  "current_stage_index": 2,
+  "current_stage_id": "R",
+  "overall_progress": 0.6666666666666666,
+  "created_at": "2025-11-09T16:42:07.735236",
+  "updated_at": "2025-11-09T16:42:07.740350",
+  "metadata": {},
+  "memories": [
+    {
+      "memory_id": "mem_0eac446a2aba",
+      "type": "decision",
+      "content": "选择 Minimal 模式",
+      "priority": "high",
+      "iteration_id": "integration_test_001",
+      "stage_id": null,
+      "mode": null,
+      "tags": [
+        "决策",
+        "integration_test_001"
+      ],
+      "metadata": {
+        "reason": "快速原型"
+      },
+      "created_at": "2025-11-09T13:13:01.647695",
+      "accessed_at": "2025-11-09T16:42:07.743498",
+      "access_count": 18
+    },
+    {
+      "memory_id": "mem_802cec139f9b",
+      "type": "decision",
+      "content": "选择 Minimal 模式",
+      "priority": "high",
+      "iteration_id": "integration_test_001",
+      "stage_id": null,
+      "mode": null,
+      "tags": [
+        "决策",
+        "integration_test_001"
+      ],
+      "metadata": {
+        "reason": "快速原型"
+      },
+      "created_at": "2025-11-09T13:12:22.603149",
+      "accessed_at": "2025-11-09T16:42:07.743504",
+      "access_count": 18
+    },
+    {
+      "memory_id": "mem_77733816f4fd",
+      "type": "decision",
+      "content": "选择 Minimal 模式",
+      "priority": "high",
+      "iteration_id": "integration_test_001",
+      "stage_id": null,
+      "mode": null,
+      "tags": [
+        "决策",
+        "integration_test_001"
+      ],
+      "metadata": {
+        "reason": "快速原型"
+      },
+      "created_at": "2025-11-09T13:13:37.039966",
+      "accessed_at": "2025-11-09T16:42:07.743505",
+      "access_count": 16
+    },
+    {
+      "memory_id": "mem_33f7bce3a263",
+      "type": "decision",
+      "content": "选择 Minimal 模式",
+      "priority": "high",
+      "iteration_id": "integration_test_001",
+      "stage_id": null,
+      "mode": null,
+      "tags": [
+        "决策",
+        "integration_test_001"
+      ],
+      "metadata": {
+        "reason": "快速原型"
+      },
+      "created_at": "2025-11-09T13:13:47.889332",
+      "accessed_at": "2025-11-09T16:42:07.743506",
+      "access_count": 14
+    },
+    {
+      "memory_id": "mem_d4ac3d1b5d7c",
+      "type": "decision",
+      "content": "选择 Minimal 模式",
+      "priority": "high",
+      "iteration_id": "integration_test_001",
+      "stage_id": null,
+      "mode": null,
+      "tags": [
+        "决策",
+        "integration_test_001"
+      ],
+      "metadata": {
+        "reason": "快速原型"
+      },
+      "created_at": "2025-11-09T15:57:25.183496",
+      "accessed_at": "2025-11-09T16:42:07.743507",
+      "access_count": 10
+    },
+    {
+      "memory_id": "mem_26a32e64cf6a",
+      "type": "decision",
+      "content": "选择 Minimal 模式",
+      "priority": "high",
+      "iteration_id": "integration_test_001",
+      "stage_id": null,
+      "mode": null,
+      "tags": [
+        "决策",
+        "integration_test_001"
+      ],
+      "metadata": {
+        "reason": "快速原型"
+      },
+      "created_at": "2025-11-09T16:06:46.803961",
+      "accessed_at": "2025-11-09T16:42:07.743508",
+      "access_count": 6
+    },
+    {
+      "memory_id": "mem_9368562545d4",
+      "type": "decision",
+      "content": "选择 Minimal 模式",
+      "priority": "high",
+      "iteration_id": "integration_test_001",
+      "stage_id": null,
+      "mode": null,
+      "tags": [
+        "决策",
+        "integration_test_001"
+      ],
+      "metadata": {
+        "reason": "快速原型"
+      },
+      "created_at": "2025-11-09T13:53:26.340229",
+      "accessed_at": "2025-11-09T16:42:07.743509",
+      "access_count": 12
+    },
+    {
+      "memory_id": "mem_c0ce9f749702",
+      "type": "decision",
+      "content": "选择 Minimal 模式",
+      "priority": "high",
+      "iteration_id": "integration_test_001",
+      "stage_id": null,
+      "mode": null,
+      "tags": [
+        "决策",
+        "integration_test_001"
+      ],
+      "metadata": {
+        "reason": "快速原型"
+      },
+      "created_at": "2025-11-09T15:57:40.127093",
+      "accessed_at": "2025-11-09T16:42:07.743510",
+      "access_count": 8
+    },
+    {
+      "memory_id": "mem_4db1cf648354",
+      "type": "decision",
+      "content": "选择 Minimal 模式",
+      "priority": "high",
+      "iteration_id": "integration_test_001",
+      "stage_id": null,
+      "mode": null,
+      "tags": [
+        "决策",
+        "integration_test_001"
+      ],
+      "metadata": {
+        "reason": "快速原型"
+      },
+      "created_at": "2025-11-09T16:07:01.631915",
+      "accessed_at": "2025-11-09T16:42:07.743511",
+      "access_count": 4
+    },
+    {
+      "memory_id": "mem_15ae72dcc0e7",
+      "type": "decision",
+      "content": "选择 Minimal 模式",
+      "priority": "high",
+      "iteration_id": "integration_test_001",
+      "stage_id": null,
+      "mode": null,
+      "tags": [
+        "决策",
+        "integration_test_001"
+      ],
+      "metadata": {
+        "reason": "快速原型"
+      },
+      "created_at": "2025-11-09T16:42:07.735895",
+      "accessed_at": "2025-11-09T16:42:07.743512",
+      "access_count": 2
+    },
+    {
+      "memory_id": "mem_76118cac81db",
+      "type": "decision",
+      "content": "选择 Minimal 模式",
+      "priority": "high",
+      "iteration_id": "integration_test_001",
+      "stage_id": null,
+      "mode": null,
+      "tags": [
+        "决策",
+        "integration_test_001"
+      ],
+      "metadata": {
+        "reason": "快速原型"
+      },
+      "created_at": "2025-11-09T13:09:25.378331",
+      "accessed_at": "2025-11-09T16:42:07.743512",
+      "access_count": 17
+    }
+  ]
+}
