@@ -5,6 +5,42 @@ All notable changes to aceflow-mcp-server will be documented in this file.
 The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.0.0/),
 and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0.html).
 
+## [3.0.2] - 2025-01-12
+
+### 🐛 Fixed - Runtime Error in Workflow Tool Execution
+
+This patch fixes a critical runtime error when executing workflow MCP tools.
+
+#### Problem
+When calling workflow MCP tools (like `memory_record_stage_output`), the server crashed with:
+```
+'MCPToolResult' object has no attribute 'content'
+```
+
+#### Root Cause
+In `mcp_stdio_server.py`, the code incorrectly accessed `result.content` when converting `MCPToolResult` to dict format. The actual field name in `MCPToolResult` is `data`, not `content`.
+
+#### Solution
+- Fixed field name in aceflow_mcp_server/mcp_stdio_server.py:304
+- Changed `result.content` → `result.data`
+
+#### Impact
+- All 21 workflow MCP tools now work correctly
+- Users can successfully execute workflow operations
+
+#### Verification
+Test with any workflow tool, e.g.:
+```python
+{
+  "iteration_id": "test_001",
+  "current_stage_output": "Test output"
+}
+```
+
+Should now return success instead of crashing.
+
+---
+
 ## [3.0.1] - 2025-01-12
 
 ### 🐛 Fixed - Critical Integration Issue

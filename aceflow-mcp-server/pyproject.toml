@@ -4,7 +4,7 @@ build-backend = "setuptools.build_meta"
 
 [project]
 name = "aceflow-mcp-server"
-version = "3.0.1"
+version = "3.0.2"
 description = "AceFlow MCP Server - AI-Driven Intelligent Workflow System with Contract-First Development, Memory Management, and 25 MCP Tools (4 Contract + 21 Workflow)"
 readme = "README.md"
 license = {text = "MIT"}

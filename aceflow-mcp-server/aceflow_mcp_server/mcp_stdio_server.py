@@ -301,7 +301,7 @@ class MCPStdioServer:
                 # 转换 MCPToolResult 为标准字典格式
                 return {
                     "success": result.success,
-                    "content": result.content,
+                    "data": result.data,  # 修正: 使用 data 而不是 content
                     "error": result.error,
                     "metadata": result.metadata
                 }
