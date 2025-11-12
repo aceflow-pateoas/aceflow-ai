@@ -34,8 +34,7 @@ class WorkflowEngine:
             "implementation",
             "unit_test",
             "integration_test",
-            "code_review",
-            "demo"
+            "code_review"
         ],
         WorkflowMode.COMPLETE: [
             "requirement_analysis",
@@ -47,9 +46,7 @@ class WorkflowEngine:
             "unit_test",
             "integration_test",
             "performance_test",
-            "security_review",
-            "code_review",
-            "demo"
+            "code_review"
         ]
     }
 

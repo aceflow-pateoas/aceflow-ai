@@ -13,10 +13,10 @@
 
 | 模板 | 阶段数 | 适用场景 | 周期 |
 |-----|--------|---------|------|
-| **standard** | 8个阶段 | 大多数软件项目 | 5-10天 (推荐) |
-| **complete** | 12个阶段 | 企业级项目、大型系统 | 2周以上 |
+| **standard** | 7个阶段 | 大多数软件项目 | 5-10天 (推荐) |
+| **complete** | 10个阶段 | 企业级项目、大型系统 | 2周以上 |
 
-### 3. Standard模板的8个阶段
+### 3. Standard模板的7个阶段
 
 ```
 1. user_stories     → 用户故事分析
@@ -26,10 +26,9 @@
 5. unit_test        → 单元测试
 6. integration_test → 集成测试
 7. code_review      → 代码审查
-8. demo             → 功能演示
 ```
 
-### 4. Complete模板的12个阶段
+### 4. Complete模板的10个阶段
 
 ```
 1. requirement_analysis  → 需求分析
@@ -40,10 +39,8 @@
 6. implementation        → 功能实现
 7. unit_test             → 单元测试
 8. integration_test      → 集成测试
-9. performance_test      → 性能测试
-10. security_review      → 安全审查
-11. code_review          → 代码审查
-12. demo                 → 功能演示
+9. performance_test      → 性能测试 (可选)
+10. code_review          → 代码审查
 ```
 
 ---

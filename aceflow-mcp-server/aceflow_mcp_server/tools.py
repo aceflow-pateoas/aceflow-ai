@@ -437,10 +437,10 @@ class AceFlowTools:
     def _get_stage_count(self, mode: str) -> int:
         """Get the number of stages for the given mode."""
         stage_counts = {
-            "standard": 8,
-            "complete": 12
+            "standard": 7,
+            "complete": 10
         }
-        return stage_counts.get(mode, 8)
+        return stage_counts.get(mode, 7)
     
     def _generate_clinerules(self, project_name: str, mode: str) -> str:
         """Generate .clinerules content."""
@@ -506,9 +506,6 @@ stages:
   - name: "code_review"
     description: "代码审查"
     required: true
-  - name: "demo"
-    description: "功能演示"
-    required: true
 
 quality_gates:
   - stage: "user_stories"
@@ -550,15 +547,9 @@ stages:
     required: true
   - name: "performance_test"
     description: "性能测试"
-    required: true
-  - name: "security_review"
-    description: "安全审查"
-    required: true
+    required: false
   - name: "code_review"
     description: "代码审查"
-    required: true
-  - name: "demo"
-    description: "功能演示"
     required: true
 
 quality_gates:
@@ -566,8 +557,8 @@ quality_gates:
     criteria: ["架构设计完整", "技术选型合理"]
   - stage: "implementation"
     criteria: ["代码质量优秀", "性能满足要求"]
-  - stage: "security_review"
-    criteria: ["安全检查通过", "无重大漏洞"]"""
+  - stage: "code_review"
+    criteria: ["代码评审通过", "无重大问题"]"""
         }
 
         return templates.get(mode, templates["standard"])
@@ -914,8 +905,7 @@ curl -X POST http://localhost:8000/mcp \\
 4. **Implementation** - 功能实现
 5. **Unit Test** - 单元测试
 6. **Integration Test** - 集成测试
-7. **Code Review** - 代码审查
-8. **Demo** - 功能演示""",
+7. **Code Review** - 代码审查""",
 
             "complete": """1. **Requirement Analysis** - 需求分析
 2. **Architecture Design** - 架构设计
@@ -925,10 +915,8 @@ curl -X POST http://localhost:8000/mcp \\
 6. **Implementation** - 功能实现
 7. **Unit Test** - 单元测试
 8. **Integration Test** - 集成测试
-9. **Performance Test** - 性能测试
-10. **Security Review** - 安全审查
-11. **Code Review** - 代码审查
-12. **Demo** - 功能演示"""
+9. **Performance Test** - 性能测试 (可选)
+10. **Code Review** - 代码审查"""
         }
 
         return descriptions.get(mode, descriptions["standard"])
