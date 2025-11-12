@@ -1024,14 +1024,16 @@ curl -X POST http://localhost:8000/mcp \\
     def aceflow_stage(
         self,
         action: str,
-        stage: Optional[str] = None
+        stage: Optional[str] = None,
+        progress: Optional[float] = None
     ) -> Dict[str, Any]:
         """Manage project stages and workflow.
-        
+
         Args:
-            action: Stage management action (status, next, list, reset)
+            action: Stage management action (status, next, list, reset, update_progress)
             stage: Optional target stage name
-            
+            progress: Optional progress value (0-100) for update_progress action
+
         Returns:
             Dict with success status and stage information
         """
@@ -1066,10 +1068,23 @@ curl -X POST http://localhost:8000/mcp \\
                     "action": action,
                     "result": result
                 }
+            elif action == "update_progress":
+                if progress is None:
+                    return {
+                        "success": False,
+                        "error": "progress parameter required for update_progress action",
+                        "message": "Missing progress value"
+                    }
+                result = self.workflow_engine.update_stage_progress(progress)
+                return {
+                    "success": True,
+                    "action": action,
+                    "result": result
+                }
             else:
                 return {
                     "success": False,
-                    "error": f"Invalid action '{action}'. Valid actions: status, next, list, reset",
+                    "error": f"Invalid action '{action}'. Valid actions: status, next, list, reset, update_progress",
                     "message": "Action not supported"
                 }
                 

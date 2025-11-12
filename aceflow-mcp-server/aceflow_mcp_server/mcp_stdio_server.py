@@ -281,7 +281,8 @@ class MCPStdioServer:
                 elif tool_name == "aceflow_stage":
                     return self.tools_instance.aceflow_stage(
                         action=arguments["action"],
-                        stage=arguments.get("stage")
+                        stage=arguments.get("stage"),
+                        progress=arguments.get("progress")
                     )
                 elif tool_name == "aceflow_validate":
                     return self.tools_instance.aceflow_validate(

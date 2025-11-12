@@ -92,12 +92,14 @@ class AceFlowToolPrompts:
 🎯 **使用场景**:
 - 查看项目当前进度和状态
 - 了解项目的工作流阶段
+- 更新当前阶段的进度
 - 推进项目到下一个阶段
 - 重置项目状态
 
 📋 **可用操作**:
 - **list**: 列出所有可用的工作流阶段
 - **status**: 查看当前项目状态和进度
+- **update_progress**: 更新当前阶段的进度 (0-100)
 - **next**: 推进到下一个阶段
 - **reset**: 重置项目状态到初始阶段
 
@@ -111,8 +113,14 @@ class AceFlowToolPrompts:
 7. code_review - 代码审查
 8. demo - 功能演示
 
+📊 **状态说明**:
+- **pending**: 待开始 - 阶段尚未开始
+- **in_progress**: 进行中 - 阶段正在进行 (进度 > 0)
+- **completed**: 已完成 - 阶段已完成 (在 completed_stages 列表中)
+
 💡 **最佳实践**:
 - 定期检查项目状态
+- 使用 update_progress 更新当前阶段的进度
 - 按顺序完成各个阶段
 - 在推进前确保当前阶段完成
                 """,
@@ -122,13 +130,20 @@ class AceFlowToolPrompts:
                         "action": {
                             "type": "string",
                             "description": "要执行的操作类型",
-                            "enum": ["list", "status", "next", "reset"],
-                            "examples": ["status", "list"]
+                            "enum": ["list", "status", "update_progress", "next", "reset"],
+                            "examples": ["status", "list", "update_progress"]
                         },
                         "stage": {
                             "type": "string",
                             "description": "特定阶段名称 (某些操作需要，如跳转到指定阶段)",
                             "examples": ["implementation", "test_design"]
+                        },
+                        "progress": {
+                            "type": "number",
+                            "description": "阶段进度 (0-100),用于 update_progress 操作",
+                            "minimum": 0,
+                            "maximum": 100,
+                            "examples": [0, 25, 50, 75, 100]
                         }
                     },
                     "required": ["action"]
@@ -144,6 +159,13 @@ class AceFlowToolPrompts:
                         "scenario": "列出所有工作流阶段",
                         "parameters": {
                             "action": "list"
+                        }
+                    },
+                    {
+                        "scenario": "更新当前阶段进度到 50%",
+                        "parameters": {
+                            "action": "update_progress",
+                            "progress": 50
                         }
                     },
                     {

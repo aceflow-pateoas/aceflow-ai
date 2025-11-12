@@ -145,34 +145,92 @@
 - 项目进行中不应该随意切换模板
 - 如果确实需要切换,应该先 `reset` 项目状态
 
-### 错误3: 不理解工作流进度
+### 错误3: 不理解工作流进度和状态
 
 **场景**: AI收到状态返回:
 ```json
 {
-  "current_stage": "user_stories",
-  "progress": 25,
-  "next_stage": "task_breakdown"
+  "current_stage": {
+    "name": "user_stories",
+    "status": "pending",
+    "progress": 0,
+    "index": 1
+  },
+  "overall_progress": 0,
+  "completed_stages": [],
+  "next_stage": "task_breakdown",
+  "total_stages": 8,
+  "remaining_stages": 7,
+  "workflow_mode": "standard"
 }
 ```
 
 **AI应该理解为**:
-- ✅ 当前处于 `user_stories` 阶段 (第1个阶段)
-- ✅ 总体进度是 25% (8个阶段中的第1个,约12.5% × 2 = 25%)
+- ✅ 当前处于 `user_stories` 阶段 (第1个阶段,共8个)
+- ✅ 阶段状态是 `pending` (待开始),进度 0%
+- ✅ 总体进度是 0% (尚未开始第一个阶段)
 - ✅ 下一个阶段是 `task_breakdown`
-- ✅ 我应该帮助用户完成用户故事分析工作
+- ✅ 我应该帮助用户开始用户故事分析工作
+- ✅ 工作开始时应该使用 `update_progress` 更新进度
 - ✅ 完成后调用 `aceflow_stage` 的 `next` 操作推进
+
+**正确的工作流程**:
+```javascript
+// 1. 查看初始状态
+{
+  "tool": "aceflow_stage",
+  "parameters": {"action": "status"}
+}
+// 返回: current_stage="user_stories", status="pending", progress=0
+
+// 2. 开始工作 - 更新进度到 25%
+{
+  "tool": "aceflow_stage",
+  "parameters": {
+    "action": "update_progress",
+    "progress": 25
+  }
+}
+// 返回: status="in_progress", stage_progress=25, overall_progress=3.13
+
+// 3. 继续工作 - 更新进度到 100%
+{
+  "tool": "aceflow_stage",
+  "parameters": {
+    "action": "update_progress",
+    "progress": 100
+  }
+}
+// 返回: status="in_progress", stage_progress=100, overall_progress=12.5
+
+// 4. 完成当前阶段 - 推进到下一阶段
+{
+  "tool": "aceflow_stage",
+  "parameters": {"action": "next"}
+}
+// 返回: current_stage="task_breakdown", status="pending", progress=0
+//       completed_stages=["user_stories"], overall_progress=12.5
+```
 
 **AI不应该**:
 - ❌ 认为 `user_stories` 是一个模板
 - ❌ 尝试调用 `aceflow_template` 的 `apply` 操作
 - ❌ 跳过当前阶段直接进入下一阶段
+- ❌ 在 `overall_progress=0` 时认为已经完成了 25%
+
+**关键理解**:
+- `stage_progress` = 当前阶段的进度 (0-100)
+- `overall_progress` = 整个项目的进度 (0-100)
+- `status` = 阶段状态 (pending/in_progress/completed)
+- 初始状态: progress=0, status="pending"
+- 工作开始: progress>0, status="in_progress"
+- 推进后: 当前阶段变为下一阶段, status重置为"pending", progress重置为0
 
 ---
 
 ## 💡 推荐工作流程
 
-### 完整的项目开发流程
+### 完整的项目开发流程 (带进度跟踪)
 
 ```javascript
 // === 阶段0: 项目初始化 ===
@@ -185,8 +243,33 @@
 }
 
 // === 阶段1: 用户故事 (user_stories) ===
+// 步骤1: 开始工作
+{
+  "tool": "aceflow_stage",
+  "parameters": {
+    "action": "update_progress",
+    "progress": 30
+  }
+}
 // AI帮助: 分析需求,编写用户故事
-// 完成后:
+
+// 步骤2: 完成大部分工作
+{
+  "tool": "aceflow_stage",
+  "parameters": {
+    "action": "update_progress",
+    "progress": 80
+  }
+}
+
+// 步骤3: 完成并推进
+{
+  "tool": "aceflow_stage",
+  "parameters": {
+    "action": "update_progress",
+    "progress": 100
+  }
+}
 {
   "tool": "aceflow_stage",
   "parameters": {"action": "next"}
@@ -194,27 +277,15 @@
 
 // === 阶段2: 任务分解 (task_breakdown) ===
 // AI帮助: 将用户故事拆分为开发任务
-// 完成后:
-{
-  "tool": "aceflow_stage",
-  "parameters": {"action": "next"}
-}
+// (重复上述步骤: update_progress → next)
 
 // === 阶段3: 测试设计 (test_design) ===
 // AI帮助: 设计测试用例
-// 完成后:
-{
-  "tool": "aceflow_stage",
-  "parameters": {"action": "next"}
-}
+// (重复上述步骤)
 
 // === 阶段4: 实现 (implementation) ===
 // AI帮助: 生成代码实现
-// 完成后:
-{
-  "tool": "aceflow_stage",
-  "parameters": {"action": "next"}
-}
+// (重复上述步骤)
 
 // === 阶段5-8: 测试、审查、演示 ===
 // 依次推进...
@@ -267,6 +338,15 @@
 
 // 列出所有阶段
 {"tool": "aceflow_stage", "parameters": {"action": "list"}}
+
+// 更新当前阶段进度
+{
+  "tool": "aceflow_stage",
+  "parameters": {
+    "action": "update_progress",
+    "progress": 50  // 0-100
+  }
+}
 
 // 推进到下一阶段
 {"tool": "aceflow_stage", "parameters": {"action": "next"}}
