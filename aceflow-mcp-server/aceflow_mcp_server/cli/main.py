@@ -9,6 +9,7 @@ from .init import init
 from .feature import feature_group
 from .contract import contract_group
 from .mock import mock_group
+from .export import export_group
 
 
 console = Console()
@@ -30,6 +31,7 @@ cli.add_command(init)
 cli.add_command(feature_group)
 cli.add_command(contract_group)
 cli.add_command(mock_group)
+cli.add_command(export_group)
 
 
 def main():
