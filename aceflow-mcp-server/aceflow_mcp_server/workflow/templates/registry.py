@@ -22,10 +22,12 @@ class TemplateRegistry:
             template_root: 模板根目录，默认为 aceflow/templates/
         """
         if template_root is None:
-            # 默认模板目录
+            # 默认模板目录: 指向项目根目录的 aceflow/templates/
+            # 路径: aceflow-mcp-server/aceflow_mcp_server/workflow/templates/registry.py
+            #    -> ../../../../aceflow/templates/
             current_file = Path(__file__)
-            aceflow_root = current_file.parent.parent.parent  # aceflow/workflow/templates -> aceflow
-            template_root = aceflow_root / "templates"
+            project_root = current_file.parent.parent.parent.parent  # -> aceflow-mcp-server/
+            template_root = project_root.parent / "aceflow" / "templates"  # -> aceflow/templates/
 
         self.template_root = template_root
         self.templates: Dict[str, Template] = {}
@@ -36,16 +38,13 @@ class TemplateRegistry:
         if not self.template_root.exists():
             return
 
-        # 扫描四种模式的模板
-        for mode in ['minimal', 'standard', 'complete', 'smart']:
+        # 扫描两种模式的模板: standard 和 complete
+        for mode in ['standard', 'complete']:
             mode_dir = self.template_root / mode
             if mode_dir.exists():
                 self._discover_mode_templates(mode, mode_dir)
 
-        # 扫描根目录的通用模板 (Complete 模式的遗留模板)
-        self._discover_root_templates()
-
-        # 扫描文档模板
+        # 扫描文档模板（如果存在）
         doc_templates_dir = self.template_root / "document_templates"
         if doc_templates_dir.exists():
             self._discover_document_templates(doc_templates_dir)
