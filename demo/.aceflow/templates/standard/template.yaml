@@ -1,0 +1,87 @@
+# Standard 模式项目模板
+# 适合大多数软件项目
+
+project:
+  name: "新建项目"
+  template: "standard"
+  team_size: "3-10人"
+  estimated_duration: "5-10天"
+  description: "标准的7阶段AceFlow流程，适合大多数软件项目"
+
+flow:
+  mode: "standard"
+  stages:
+    - id: "user_stories"
+      name: "用户故事分析"
+      description: "编写用户故事和验收标准"
+      template: "user_stories.md"
+      estimated_duration: "1-2天"
+      quality_gates:
+        - "用户故事完整"
+        - "验收标准明确"
+        - "优先级合理"
+
+    - id: "task_breakdown"
+      name: "任务分解"
+      description: "将用户故事分解为开发任务"
+      template: "task_breakdown.md"
+      estimated_duration: "1天"
+      quality_gates:
+        - "任务粒度合理"
+        - "依赖关系清晰"
+        - "工时估算准确"
+
+    - id: "test_design"
+      name: "测试用例设计"
+      description: "设计测试用例"
+      template: "test_design.md"
+      estimated_duration: "1-2天"
+      quality_gates:
+        - "测试用例覆盖完整"
+        - "测试数据准备就绪"
+
+    - id: "implementation"
+      name: "功能实现"
+      description: "开发功能代码"
+      template: "implementation.md"
+      estimated_duration: "主要开发周期"
+      quality_gates:
+        - "代码符合规范"
+        - "功能实现完整"
+
+    - id: "unit_test"
+      name: "单元测试"
+      description: "执行单元测试"
+      template: "unit_test.md"
+      estimated_duration: "1-2天"
+      quality_gates:
+        - "测试全部通过"
+        - "代码覆盖率 ≥ 80%"
+
+    - id: "integration_test"
+      name: "集成测试"
+      description: "执行集成测试"
+      template: "integration_test.md"
+      estimated_duration: "1-2天"
+      quality_gates:
+        - "集成测试通过率 ≥ 95%"
+        - "严重缺陷已修复"
+
+    - id: "code_review"
+      name: "代码审查"
+      description: "审查代码质量"
+      template: "code_review.md"
+      estimated_duration: "1天"
+      quality_gates:
+        - "代码质量评分 ≥ 8/10"
+        - "严重问题修复率 100%"
+
+quality_standards:
+  code_coverage: ">= 80%"
+  test_pass_rate: ">= 95%"
+  code_quality_score: ">= 8.0/10"
+
+best_practices:
+  - "及时归档产出物"
+  - "严格执行质量门控"
+  - "持续集成和测试"
