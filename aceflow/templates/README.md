@@ -1,389 +1,199 @@
-# AceFlow v3.0 模板库
+# AceFlow v4.0 工作流模板库
 
-## 📚 模板结构说明
+## 📚 当前模板结构
 
-本目录包含 AceFlow v3.0 所有流程模式的模板文件,支持 **Minimal**、**Standard**、**Complete** 和 **Smart** 四种模式。
+本目录包含 **AceFlow v4.0** 的6种工作流模板。
+
+> ⚠️ **重要**: v3.0的模板（minimal/standard/complete）已废弃，请使用v4.0工作流系统。
 
 ```
 templates/
-├── README.md                          # 本文档
-│
-├── minimal/                           # 轻量级模式(P→D→R)
-│   ├── README.md                      # 模式使用指南
-│   ├── planning.md                    # P阶段: 规划
-│   ├── development.md                 # D阶段: 开发
-│   ├── review.md                      # R阶段: 评审
-│   ├── summary.md                     # 迭代总结
-│   └── workflows/                     # 工作流模板
-│       ├── bug_fix.md                 # Bug修复流程
-│       ├── feature_quick.md           # 快速功能开发
-│       └── prototype.md               # 原型开发流程
-│
-├── standard/                          # 标准模式(P1→P2→D1→D2→R1)
-│   ├── README.md                      # 模式使用指南
-│   ├── p1_requirements.md             # P1阶段: 需求分析
-│   ├── p2_design.md                   # P2阶段: 技术设计
-│   ├── d1_implementation.md           # D1阶段: 功能开发
-│   ├── d2_testing.md                  # D2阶段: 测试验证
-│   ├── r1_release.md                  # R1阶段: 发布准备
-│   └── template.yaml                  # 模式配置
-│
-├── complete/                          # 完整模式(S1→S2→...→S8)
-│   ├── README.md                      # 模式使用指南
-│   ├── s1_user_story.md               # S1: 用户故事
-│   ├── s2_tasks_main.md               # S2: 主任务清单
-│   ├── s2_tasks_group.md              # S2: 任务分组
-│   ├── s3_testcases.md                # S3: 测试用例汇总
-│   ├── s3_testcases_main.md           # S3: 单个测试用例
-│   ├── s4_implementation.md           # S4: 功能实现汇总
-│   ├── s4_implementation_report.md    # S4: 单个任务实现报告
-│   ├── s5_test_report.md              # S5: 测试报告
-│   ├── s6_codereview.md               # S6: 代码评审
-│   ├── s7_demo_script.md              # S7: 演示脚本
-│   ├── s8_summary_report.md           # S8: 迭代总结
-│   ├── s8_learning_summary.md         # S8: 经验总结
-│   └── template.yaml                  # 模式配置
-│
-├── smart/                             # 智能模式(动态流程)
-│   ├── README.md                      # 模式使用指南
-│   ├── dynamic_prompts.md             # 动态提示模板
-│   ├── decision_engine.md             # 智能决策引擎
-│   └── learning_system.md             # 学习优化系统
-│
-├── document_templates/                # 文档模板
-│   ├── config_guide.md                # 配置指南模板
-│   └── process_spec.md                # 流程规范模板
-│
-└── task-status-table.md               # 任务状态表模板
+└── workflows/                           # v4.0 工作流模板
+    ├── feature/                         # 功能开发 (5阶段)
+    │   ├── requirement.md               # 需求分析
+    │   ├── design.md                    # 设计方案
+    │   ├── implementation.md            # 功能实现
+    │   ├── testing.md                   # 测试验证
+    │   └── delivery.md                  # 交付发布
+    │
+    ├── bugfix/                          # Bug修复 (5阶段)
+    │   ├── analyze.md                   # Bug分析
+    │   ├── locate.md                    # 问题定位
+    │   ├── fix.md                       # 修复实现
+    │   ├── verify.md                    # 修复验证
+    │   └── release.md                   # 发布上线
+    │
+    ├── refactor/                        # 代码重构 (5阶段)
+    │   ├── analyze.md                   # 重构分析
+    │   ├── plan.md                      # 重构计划
+    │   ├── refactor.md                  # 重构实现
+    │   ├── test.md                      # 重构测试
+    │   └── finalize.md                  # 完成收尾
+    │
+    ├── review/                          # 代码审查 (4阶段)
+    │   ├── prepare.md                   # 审查准备
+    │   ├── review.md                    # 进行审查
+    │   ├── address.md                   # 处理反馈
+    │   └── complete.md                  # 完成合并
+    │
+    ├── documentation/                   # 文档编写 (3阶段)
+    │   ├── outline.md                   # 文档大纲
+    │   ├── write.md                     # 编写文档
+    │   └── review.md                    # 审查发布
+    │
+    └── performance/                     # 性能优化 (3阶段)
+        ├── diagnose.md                  # 性能诊断
+        ├── optimize.md                  # 优化实现
+        └── verify.md                    # 效果验证
 ```
 
----
+## 🎯 工作流类型说明
 
-## 🎯 模式选择指南
+### 1. Feature Workflow - 功能开发
+**适用场景**: 新功能开发、功能增强
+**阶段**: requirement → design → implementation → testing → delivery
+**典型周期**: 3-7天
 
-### 快速选择表
+### 2. Bugfix Workflow - Bug修复
+**适用场景**: 紧急Bug修复、问题排查
+**阶段**: analyze → locate → fix → verify → release
+**典型周期**: 0.5-2天
 
-| 判断因素 | Minimal | Standard | Complete | Smart |
-|---------|---------|----------|----------|-------|
-| **团队规模** | 1-3人 | 3-10人 | 10+人 | 任意 |
-| **项目周期** | 0.5-2天 | 3-7天 | 1-4周 | 动态 |
-| **复杂度** | 简单 | 中等 | 复杂 | 不确定 |
-| **质量要求** | 基础 | 标准 | 严格 | 自适应 |
-| **文档需求** | 最小 | 标准 | 完整 | 按需 |
-| **适用场景** | 快速原型<br/>Bug修复 | 常规功能开发<br/>企业应用 | 大型项目<br/>关键系统 | 复杂度难预估<br/>AI辅助决策 |
+### 3. Refactor Workflow - 代码重构
+**适用场景**: 代码优化、架构调整
+**阶段**: analyze → plan → refactor → test → finalize
+**典型周期**: 2-5天
 
-### 详细对比
+### 4. Review Workflow - 代码审查
+**适用场景**: Pull Request审查、代码评审
+**阶段**: prepare → review → address → complete
+**典型周期**: 0.5-2天
 
-#### 🚀 Minimal 模式 (轻量级)
+### 5. Documentation Workflow - 文档编写
+**适用场景**: 技术文档、用户手册
+**阶段**: outline → write → review
+**典型周期**: 1-3天
 
-**流程**: P → D → R (3个阶段)
+### 6. Performance Workflow - 性能优化
+**适用场景**: 性能瓶颈优化、响应时间改善
+**阶段**: diagnose → optimize → verify
+**典型周期**: 2-5天
 
-**优点**:
-- ✅ 流程简单,上手快
-- ✅ 开发速度快
-- ✅ 适合小团队和快速迭代
-- ✅ 文档负担轻
+## 💡 使用方法
 
-**缺点**:
-- ❌ 质量保障相对薄弱
-- ❌ 不适合大团队协作
-- ❌ 文档可能不够完整
+### 通过MCP工具使用（推荐）
 
-**典型场景**:
-- 快速原型验证
-- 紧急Bug修复
-- 简单功能开发
-- 个人或2-3人小项目
+```python
+# 1. 开始工作项
+aceflow_v4_start_work_item(
+    type="feature",
+    title="用户认证功能",
+    description="实现JWT认证和授权"
+)
 
----
+# 2. 系统自动加载对应的模板
+# 例如: workflows/feature/requirement.md
 
-#### ⚙️ Standard 模式 (标准级)
-
-**流程**: P1 → P2 → D1 → D2 → R1 (5个阶段)
-
-**优点**:
-- ✅ 流程完整度适中
-- ✅ 质量和效率平衡好
-- ✅ 适合中型团队
-- ✅ 文档标准化
-
-**缺点**:
-- ❌ 不如Minimal灵活
-- ❌ 不如Complete严格
-- ❌ 需要一定流程学习成本
-
-**典型场景**:
-- Web/移动应用开发
-- 企业内部系统
-- 常规功能迭代
-- 3-10人团队项目
-
----
-
-#### 🏗️ Complete 模式 (完整级)
-
-**流程**: S1 → S2 → S3 → (S4↔S5) → S6 → S7 → S8 (8个阶段)
-
-**优点**:
-- ✅ 流程最完整
-- ✅ 质量保障最强
-- ✅ 适合大团队和复杂项目
-- ✅ 文档完整,可追溯性强
-
-**缺点**:
-- ❌ 流程复杂,学习成本高
-- ❌ 执行周期长
-- ❌ 小团队可能效率低
-- ❌ 文档工作量大
-
-**典型场景**:
-- 大型企业级项目
-- 金融、医疗等关键系统
-- 高合规要求项目
-- 10人以上大团队
-
----
-
-#### 🧠 Smart 模式 (智能级)
-
-**流程**: AI动态决策,自适应调整
-
-**优点**:
-- ✅ AI智能推荐最优流程
-- ✅ 动态调整,适应变化
-- ✅ 持续学习和优化
-- ✅ 减少决策负担
-
-**缺点**:
-- ❌ 需要AI集成
-- ❌ 决策透明度相对较低
-- ❌ 依赖历史数据质量
-
-**典型场景**:
-- 复杂度难以预估的项目
-- 需求可能快速变化
-- 希望优化流程效率
-- 有AI Agent支持的环境
-
----
-
-## 📖 使用指南
-
-### 1. 选择模式
-
-根据项目特征选择合适的模式:
-
-```bash
-# 方式1: 手动选择
-# 根据上表判断,选择合适的模式
-
-# 方式2: 使用Smart模式让AI推荐
-# AI会根据项目信息自动推荐最优模式
+# 3. 完成阶段任务后推进
+aceflow_v4_complete_stage(
+    work_item_id="work_001",
+    stage_id="requirement"
+)
 ```
 
-### 2. 初始化项目
+### 通过Python API使用
 
-```bash
-# 使用 init 脚本初始化项目
-python .aceflow/scripts/init.py --mode <minimal|standard|complete|smart>
+```python
+from aceflow.workflow.core.engine import WorkflowEngine
+from aceflow.workflow.models import WorkflowType
 
-# 或者手动创建目录结构
-mkdir -p aceflow_result/iter_001/{阶段目录}
+# 创建引擎
+engine = WorkflowEngine(project_id="my_project")
+
+# 开始功能开发工作流
+result = engine.start_work_item(
+    type=WorkflowType.FEATURE,
+    title="用户登录",
+    description="实现用户登录和会话管理"
+)
+
+# 获取当前阶段的模板路径
+work_item = engine.get_current_work_item()
+template_path = work_item.current_stage.checklist_template
+# 例如: "workflows/feature/requirement.md"
 ```
 
-### 3. 使用模板
+## 🔧 模板开发
 
-**方式1: 复制模板**
-```bash
-# 复制对应模式的模板到输出目录
-cp .aceflow/templates/standard/p1_requirements.md \
-   aceflow_result/iter_001/P1_requirements/requirements.md
-```
+### 模板文件格式
 
-**方式2: AI自动生成**
+所有模板使用Markdown格式，支持以下特性：
+
+1. **任务检查清单**
 ```markdown
-# AI会根据模板格式自动生成内容
-# 在 .clinerules 中配置 AceFlow 集成规则
-# AI会自动使用对应模板
+- [ ] 任务项1
+- [ ] 任务项2
 ```
 
-### 4. 填写模板
-
-模板中使用 `{变量名}` 表示需要填充的内容:
-
-- `{iteration_id}`: 迭代ID,如 "iter_001"
-- `{start_time}`: 开始时间
-- `{owner}`: 负责人
-- `{completion_time}`: 完成时间
-- 等等...
-
-**示例**:
+2. **记忆注入占位符**（v4.1即将支持）
 ```markdown
-# 原模板
-**迭代ID**: `{iteration_id}`
-**负责人**: `{owner}`
+## 项目记忆
 
-# 填充后
-**迭代ID**: `iter_001`
-**负责人**: 张三
+{{project_memory}}
 ```
 
----
+3. **变量替换**
+```markdown
+# {{work_item_title}}
 
-## 🔧 模板变量说明
-
-### 通用变量
-
-| 变量名 | 说明 | 示例值 |
-|-------|------|--------|
-| `{iteration_id}` | 迭代ID | iter_001 |
-| `{project_name}` | 项目名称 | 用户管理系统 |
-| `{start_time}` | 开始时间 | 2025-11-06 09:00 |
-| `{completion_time}` | 完成时间 | 2025-11-06 18:00 |
-| `{owner}` | 负责人 | 张三 |
-| `{reviewer}` | 审核人 | 李四 |
-| `{version}` | 版本号 | v1.2.0 |
-
-### Complete模式特有变量
-
-| 变量名 | 说明 | 示例值 |
-|-------|------|--------|
-| `{task_id}` | 任务ID | TASK-001 |
-| `{story_id}` | 用户故事ID | US-001 |
-| `{test_id}` | 测试用例ID | TC-001 |
-| `{commit_hash}` | Git提交哈希 | abc1234 |
-
-### Smart模式特有变量
-
-| 变量名 | 说明 | 示例值 |
-|-------|------|--------|
-| `{complexity_score}` | 复杂度评分 | 45 |
-| `{recommended_mode}` | 推荐模式 | standard |
-| `{confidence}` | 置信度 | 0.85 |
-| `{reasoning}` | 推荐理由 | 中等复杂度,适合标准流程 |
-
----
-
-## 🎨 模板自定义
-
-### 1. 修改现有模板
-
-可以直接修改 `templates/` 目录下的模板文件:
-
-```bash
-# 编辑模板
-vim .aceflow/templates/standard/p1_requirements.md
-
-# 添加自定义章节
-# 调整章节顺序
-# 修改字段名称
+工作项ID: {{work_item_id}}
+阶段: {{stage_name}}
 ```
 
-### 2. 创建自定义模式
+### 添加新模板
 
-```bash
-# 1. 复制现有模式
-cp -r .aceflow/templates/standard .aceflow/templates/my_custom
+1. 在对应的工作流目录下创建markdown文件
+2. 在对应的Workflow类中注册阶段定义
+3. 运行测试验证
 
-# 2. 修改模板
-# 根据团队需求调整模板内容
+## 📖 相关文档
 
-# 3. 更新配置
-# 在 config.yaml 中添加自定义模式配置
-```
+- **工作流系统文档**: `docs/ACEFLOW_V4_IMPLEMENTATION_LOG.md`
+- **API参考**: `docs/WORKFLOW_API_REFERENCE.md`
+- **快速开始**: `docs/WORKFLOW_QUICK_START.md`
 
-### 3. 版本控制
+## 🔄 从v3.0迁移
 
-建议将自定义模板纳入版本控制:
+如果你正在使用v3.0的模板系统，请参考迁移指南：
 
-```bash
-git add .aceflow/templates/my_custom/
-git commit -m "Add custom workflow template"
-```
+### v3.0 → v4.0 映射
 
----
+| v3.0模式 | v4.0工作流 | 说明 |
+|---------|-----------|------|
+| Minimal (P→D→R) | BugfixWorkflow | 快速修复场景 |
+| Standard (5阶段) | FeatureWorkflow | 标准功能开发 |
+| Complete (8阶段) | FeatureWorkflow + 质量检查 | 严格流程场景 |
+| Smart (自适应) | 根据type自动选择 | 由WorkflowEngine智能选择 |
 
-## 💡 最佳实践
+### 迁移步骤
 
-### 1. 模板使用建议
+1. ✅ 停止使用 `MinimalWorkflow`, `StandardWorkflow`, `CompleteWorkflow`
+2. ✅ 改用新的工作流类型: `WorkflowType.FEATURE`, `WorkflowType.BUGFIX` 等
+3. ✅ 更新模板路径引用
+4. ✅ 使用新的API接口
 
-**✅ 推荐做法**:
-- 根据实际需要调整模板内容
-- 保持模板格式一致性
-- 及时更新模板(基于经验改进)
-- 团队共同维护模板库
+## 🆕 v4.0 新特性
 
-**❌ 不推荐做法**:
-- 完全照搬模板不做调整
-- 频繁大幅修改模板格式
-- 不同项目使用不同模板版本
-- 模板过于复杂难以使用
-
-### 2. 文档填写建议
-
-**简洁明了**:
-- 避免冗长描述
-- 使用表格和列表
-- 重点突出关键信息
-
-**持续更新**:
-- 及时记录变更
-- 保持文档最新
-- 定期review和清理
-
-**团队协作**:
-- 明确文档负责人
-- 建立Review机制
-- 统一术语和格式
-
-### 3. 模式切换建议
-
-**何时考虑切换模式**:
-- ✅ 发现当前模式明显不适合
-- ✅ 项目复杂度评估有误
-- ✅ 团队规模发生重大变化
-- ✅ 质量要求发生变化
-
-**如何平滑切换**:
-- 在迭代边界切换(不要中途切换)
-- 保留已完成的文档
-- 团队培训新模式
-- 试运行1-2个迭代
+- ✅ 更精细的工作流分类（6种类型）
+- ✅ 动态阶段定义
+- ✅ 任务依赖管理
+- ✅ 记忆系统集成
+- ✅ MCP工具完整支持
+- 🔄 记忆自动注入（即将支持）
+- 🔄 模板热重载（即将支持）
 
 ---
 
-## 📚 相关文档
-
-- **主规范**: [aceflow-spec_v3.0.md](../aceflow-spec_v3.0.md) - AceFlow v3.0完整规范
-- **v2规范**: [aceflow-spec_v2.0.md](../aceflow-spec_v2.0.md) - v2版本参考
-- **配置指南**: [document_templates/config_guide.md](document_templates/config_guide.md)
-- **流程规范**: [document_templates/process_spec.md](document_templates/process_spec.md)
-
----
-
-## 🔄 模板版本历史
-
-### v3.0.0 (2025-11-06)
-- ✨ 新增 Standard 模式完整模板(5个阶段)
-- ✨ 新增 Smart 模式智能决策系统
-- ✨ 重构 Complete 模式模板组织
-- ✨ 改进 Minimal 模式工作流模板
-- 📝 完善所有模板的变量说明和示例
-
-### v2.0.0 (2025-07)
-- ✨ 初始版本
-- ✨ Complete 模式8阶段模板
-- ✨ Minimal 模式基础模板
-
----
-
-## 📞 支持和反馈
-
-如有问题或建议,请:
-- 📧 提交Issue: https://github.com/aceflow/aceflow/issues
-- 💬 加入讨论: https://community.aceflow.dev
-- 📖 查看文档: https://docs.aceflow.dev
-
----
-
-**© 2025 AceFlow Team. All rights reserved.**
+**版本**: v4.0.0
+**最后更新**: 2025-11-17
+**维护者**: AceFlow Team

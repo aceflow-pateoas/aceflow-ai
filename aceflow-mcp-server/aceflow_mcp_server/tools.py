@@ -11,6 +11,38 @@ import datetime
 # Import core functionality
 from .core import ProjectManager, WorkflowEngine, TemplateManager
 
+# Import v4.0 workflow system from main aceflow package
+try:
+    from aceflow.workflow.core.engine import WorkflowEngine as AceFlowV4Engine
+    from aceflow.workflow.core.state import StateManager as AceFlowV4StateManager
+    from aceflow.workflow.models import WorkflowType, WorkItemStatus, TaskStatus, Task
+    from aceflow.workflow.workflows import (
+        FeatureWorkflow,
+        BugfixWorkflow,
+        RefactorWorkflow,
+        ReviewWorkflow,
+        DocumentationWorkflow,
+        PerformanceWorkflow
+    )
+    from aceflow.workflow.task_manager import TaskManager, TaskSuggestion
+    from aceflow.workflow.quality import CodeGenerationStrategy
+    from aceflow.workflow.memory import (
+        V4MemoryManager,
+        MemoryExtractor,
+        MemoryInjector,
+        MemoryInjectionContext,
+        DecisionScope,
+        LessonCategory
+    )
+    V4_AVAILABLE = True
+except ImportError as e:
+    print(f"[WARNING] v4.0 workflow system not available: {e}", file=sys.stderr)
+    V4_AVAILABLE = False
+    AceFlowV4Engine = None
+    WorkflowType = None
+    TaskManager = None
+    CodeGenerationStrategy = None
+
 # Import existing AceFlow functionality
 current_dir = Path(__file__).parent
 aceflow_scripts_dir = current_dir.parent.parent / "aceflow" / "scripts"
@@ -38,15 +70,36 @@ except ImportError:
 class AceFlowTools:
     """AceFlow MCP Tools collection."""
     
-    def __init__(self, working_directory: Optional[str] = None):
+    def __init__(self, working_directory: Optional[str] = None, project_id: str = "default"):
         """Initialize tools with necessary dependencies."""
         self.platform_utils = PlatformUtils()
         self.file_ops = SafeFileOperations()
         self.error_handler = EnhancedErrorHandler()
         self.project_manager = ProjectManager()
-        self.workflow_engine = WorkflowEngine()
+        self.workflow_engine = WorkflowEngine()  # v3.0 engine
         self.template_manager = TemplateManager()
-        
+
+        # Initialize v4.0 workflow system
+        if V4_AVAILABLE:
+            self.v4_engine = AceFlowV4Engine(project_id=project_id)
+            self._register_v4_workflows()
+            self.task_manager = TaskManager(self.v4_engine.state_manager)
+            self.code_generator = CodeGenerationStrategy()
+
+            # Initialize memory system (v4.0)
+            # Memory storage path: .aceflow/memory/{project_id}/memories.json
+            memory_storage_path = Path(".aceflow/memory") / project_id / "memories.json"
+            self.memory_manager = V4MemoryManager(storage_path=memory_storage_path)
+            self.memory_extractor = MemoryExtractor(self.memory_manager)
+            self.memory_injector = MemoryInjector(self.memory_manager)
+        else:
+            self.v4_engine = None
+            self.task_manager = None
+            self.code_generator = None
+            self.memory_manager = None
+            self.memory_extractor = None
+            self.memory_injector = None
+
         # Store initial working directory for fallback, but don't use it as fixed
         self.fallback_working_directory = working_directory
         
@@ -1221,3 +1274,1399 @@ project_root/
 
 **© 2025 AceFlow Team. All rights reserved.**
 """
+
+    # ==================== v4.0 MCP Tools ====================
+
+    def _register_v4_workflows(self):
+        """Register all 6 v4.0 workflow implementations."""
+        if not V4_AVAILABLE:
+            return
+
+        try:
+            self.v4_engine.register_workflow_implementation(WorkflowType.FEATURE, FeatureWorkflow())
+            self.v4_engine.register_workflow_implementation(WorkflowType.BUGFIX, BugfixWorkflow())
+            self.v4_engine.register_workflow_implementation(WorkflowType.REFACTOR, RefactorWorkflow())
+            self.v4_engine.register_workflow_implementation(WorkflowType.REVIEW, ReviewWorkflow())
+            self.v4_engine.register_workflow_implementation(WorkflowType.DOCUMENTATION, DocumentationWorkflow())
+            self.v4_engine.register_workflow_implementation(WorkflowType.PERFORMANCE, PerformanceWorkflow())
+
+            print("[INFO] v4.0 workflows registered: feature, bugfix, refactor, review, documentation, performance", file=sys.stderr)
+        except Exception as e:
+            print(f"[ERROR] Failed to register v4.0 workflows: {e}", file=sys.stderr)
+
+    def aceflow_v4_start_work_item(
+        self,
+        type: str,
+        title: str,
+        description: str = "",
+        metadata: Optional[Dict[str, Any]] = None
+    ) -> Dict[str, Any]:
+        """Start a new v4.0 work item with specified workflow type.
+
+        ⚠️ IMPORTANT: After starting a work item, you will be in the first stage.
+        Complete all checklist items for that stage, then call aceflow_v4_complete_stage()
+        to advance to the next stage.
+
+        Args:
+            type: Workflow type (feature, bugfix, refactor, review, documentation, performance)
+            title: Work item title
+            description: Detailed description
+            metadata: Optional metadata
+
+        Returns:
+            Dict with work item details, current stage guidance, and reminder
+
+        Example:
+            >>> aceflow_v4_start_work_item(type="feature", title="User Login API")
+        """
+        if not V4_AVAILABLE:
+            return {
+                "success": False,
+                "error": "v4.0 workflow system not available",
+                "message": "Please ensure aceflow package is properly installed"
+            }
+
+        try:
+            # Convert string to WorkflowType enum
+            workflow_type = WorkflowType(type.lower())
+
+            # Start work item
+            result = self.v4_engine.start_work_item(
+                type=workflow_type,
+                title=title,
+                description=description,
+                metadata=metadata
+            )
+
+            # Add reminder for next action
+            if result.get('success') and result.get('current_stage'):
+                current_stage = result['current_stage']
+                tasks_count = len(current_stage.get('tasks', []))
+                tasks_indicator = f"{tasks_count} tasks" if tasks_count > 0 else "the checklist items"
+
+                result['reminder'] = (
+                    f"⚠️ NEXT STEP: You are now in the '{current_stage.get('name')}' stage. "
+                    f"Please complete {tasks_indicator}, then "
+                    f"call aceflow_v4_complete_stage(work_item_id='{result['work_item_id']}', "
+                    f"stage_id='{current_stage.get('stage_id')}') to advance."
+                )
+
+            return result
+
+        except ValueError:
+            return {
+                "success": False,
+                "error": f"Invalid workflow type '{type}'. Valid types: feature, bugfix, refactor, review, documentation, performance",
+                "message": "Invalid workflow type"
+            }
+        except Exception as e:
+            return {
+                "success": False,
+                "error": str(e),
+                "message": "Failed to start work item"
+            }
+
+    def aceflow_v4_get_current_work_item(self) -> Dict[str, Any]:
+        """Get the currently active v4.0 work item.
+
+        Returns:
+            Dict with current work item details or None if no active work item
+        """
+        if not V4_AVAILABLE:
+            return {
+                "success": False,
+                "error": "v4.0 workflow system not available",
+                "message": "Please ensure aceflow package is properly installed"
+            }
+
+        try:
+            result = self.v4_engine.get_current_work_item()
+
+            if result is None:
+                return {
+                    "success": True,
+                    "active": False,
+                    "message": "No active work item found"
+                }
+
+            return {
+                "success": True,
+                "active": True,
+                "work_item": result
+            }
+
+        except Exception as e:
+            return {
+                "success": False,
+                "error": str(e),
+                "message": "Failed to get current work item"
+            }
+
+    def aceflow_v4_list_work_items(
+        self,
+        status: Optional[str] = None
+    ) -> Dict[str, Any]:
+        """List all v4.0 work items with optional status filter.
+
+        Args:
+            status: Optional status filter (pending/in_progress/completed/cancelled/blocked)
+
+        Returns:
+            Dict with list of work items
+        """
+        if not V4_AVAILABLE:
+            return {
+                "success": False,
+                "error": "v4.0 workflow system not available",
+                "message": "Please ensure aceflow package is properly installed"
+            }
+
+        try:
+            work_items = self.v4_engine.list_all_work_items(status)
+
+            return {
+                "success": True,
+                "count": len(work_items),
+                "work_items": work_items,
+                "filter": status or "all"
+            }
+
+        except Exception as e:
+            return {
+                "success": False,
+                "error": str(e),
+                "message": "Failed to list work items"
+            }
+
+    def aceflow_v4_complete_stage(
+        self,
+        work_item_id: str,
+        stage_id: str,
+        checklist_results: Optional[Dict[str, Any]] = None
+    ) -> Dict[str, Any]:
+        """Complete a stage and advance to the next one (v4.0).
+
+        ⚠️ IMPORTANT: After completing all checklist items in a stage, you MUST call this tool
+        to mark the stage as completed and advance to the next stage. Forgetting to call this
+        will leave the workflow stuck in the current stage.
+
+        Args:
+            work_item_id: Work item ID
+            stage_id: Current stage ID to complete
+            checklist_results: Optional checklist completion results (for record keeping)
+
+        Returns:
+            Dict with completion status, next stage info, and reminder to complete next stage
+
+        Example:
+            After finishing all tasks in "requirement" stage:
+            >>> aceflow_v4_complete_stage(work_item_id="work_abc123", stage_id="requirement")
+        """
+        if not V4_AVAILABLE:
+            return {
+                "success": False,
+                "error": "v4.0 workflow system not available",
+                "message": "Please ensure aceflow package is properly installed"
+            }
+
+        try:
+            # Complete the stage using StateManager
+            success = self.v4_engine.state_manager.complete_stage(
+                work_item_id=work_item_id,
+                stage_id=stage_id,
+                checklist_results=checklist_results
+            )
+
+            if success:
+                # Get updated work item
+                work_item = self.v4_engine.state_manager.get_work_item(work_item_id)
+
+                if not work_item:
+                    return {
+                        "success": False,
+                        "error": "Work item not found after completion",
+                        "message": "Failed to retrieve updated work item"
+                    }
+
+                current_stage = work_item.current_stage
+
+                # Build enhanced response with next stage reminder
+                response = {
+                    "success": True,
+                    "message": f"✅ Stage '{stage_id}' completed successfully",
+                    "overall_progress": work_item.overall_progress
+                }
+
+                # Add current/next stage information and reminder
+                if current_stage and current_stage.status.value == 'in_progress':
+                    # There is a next stage
+                    response["current_stage"] = current_stage.to_dict()
+                    response["next_stage_name"] = current_stage.name
+
+                    # Use tasks list length or description as indicator
+                    tasks_count = len(current_stage.tasks) if current_stage.tasks else 0
+                    tasks_indicator = f"{tasks_count} tasks" if tasks_count > 0 else "the checklist items"
+
+                    response["reminder"] = (
+                        f"⚠️ NEXT STEP: You are now in the '{current_stage.name}' stage. "
+                        f"Please complete {tasks_indicator}, then "
+                        f"call aceflow_v4_complete_stage(work_item_id='{work_item_id}', "
+                        f"stage_id='{current_stage.stage_id}') to advance."
+                    )
+                else:
+                    # All stages completed
+                    response["current_stage"] = current_stage.to_dict() if current_stage else None
+                    response["next_stage_name"] = None
+                    response["reminder"] = (
+                        "🎉 All stages completed! You can now mark the work item as completed "
+                        "or perform final delivery steps."
+                    )
+
+                return response
+            else:
+                return {
+                    "success": False,
+                    "error": "Failed to complete stage",
+                    "message": "Stage completion failed (stage or work item not found)"
+                }
+
+        except Exception as e:
+            return {
+                "success": False,
+                "error": str(e),
+                "message": "Failed to complete stage"
+            }
+
+    def aceflow_v4_add_task(
+        self,
+        work_item_id: str,
+        task_id: str,
+        title: str,
+        description: str = "",
+        dependencies: Optional[List[str]] = None,
+        position: Optional[str] = None
+    ) -> Dict[str, Any]:
+        """Add a task to a work item (v4.0 - FEATURE type only).
+
+        Args:
+            work_item_id: Work item ID
+            task_id: Unique task ID
+            title: Task title
+            description: Task description
+            dependencies: List of task IDs this task depends on
+            position: Optional position (e.g., "after:task_2")
+
+        Returns:
+            Dict with success status
+        """
+        if not V4_AVAILABLE:
+            return {
+                "success": False,
+                "error": "v4.0 workflow system not available",
+                "message": "Please ensure aceflow package is properly installed"
+            }
+
+        try:
+            # Create task object
+            task = Task(
+                task_id=task_id,
+                title=title,
+                description=description,
+                dependencies=dependencies or []
+            )
+
+            # Add task using StateManager
+            success = self.v4_engine.state_manager.add_task(
+                work_item_id=work_item_id,
+                task=task,
+                position=position
+            )
+
+            if success:
+                return {
+                    "success": True,
+                    "message": f"Task '{task_id}' added to work item '{work_item_id}'",
+                    "task": {
+                        "task_id": task_id,
+                        "title": title,
+                        "status": "pending"
+                    }
+                }
+            else:
+                return {
+                    "success": False,
+                    "error": "Failed to add task",
+                    "message": "Task addition failed (work item may not support tasks or not found)"
+                }
+
+        except Exception as e:
+            return {
+                "success": False,
+                "error": str(e),
+                "message": "Failed to add task"
+            }
+
+    def aceflow_v4_update_task_status(
+        self,
+        work_item_id: str,
+        task_id: str,
+        status: str
+    ) -> Dict[str, Any]:
+        """Update task status (v4.0).
+
+        ⚠️ IMPORTANT: After completing all tasks in the current stage, remember to call
+        aceflow_v4_complete_stage() to mark the stage as completed and advance to the next stage.
+
+        Args:
+            work_item_id: Work item ID
+            task_id: Task ID to update
+            status: New status (pending/in_progress/completed/skipped)
+
+        Returns:
+            Dict with success status, task progress, and reminder if all tasks completed
+        """
+        if not V4_AVAILABLE:
+            return {
+                "success": False,
+                "error": "v4.0 workflow system not available",
+                "message": "Please ensure aceflow package is properly installed"
+            }
+
+        try:
+            # Update task status using StateManager
+            success = self.v4_engine.state_manager.update_task_status(
+                work_item_id=work_item_id,
+                task_id=task_id,
+                status=status
+            )
+
+            if success:
+                # Get updated task progress
+                work_item = self.v4_engine.state_manager.get_work_item(work_item_id)
+
+                if not work_item:
+                    return {
+                        "success": True,
+                        "message": f"Task '{task_id}' status updated to '{status}'",
+                        "task_progress": 0
+                    }
+
+                response = {
+                    "success": True,
+                    "message": f"Task '{task_id}' status updated to '{status}'",
+                    "task_progress": work_item.task_progress,
+                    "total_tasks": len(work_item.tasks),
+                    "completed_tasks": len([t for t in work_item.tasks if t.status.value == 'completed'])
+                }
+
+                # Add reminder if all tasks are completed
+                if work_item.task_progress >= 1.0 and work_item.current_stage:
+                    response["reminder"] = (
+                        f"🎉 All tasks completed! You can now complete the '{work_item.current_stage.name}' stage. "
+                        f"Call aceflow_v4_complete_stage(work_item_id='{work_item_id}', "
+                        f"stage_id='{work_item.current_stage.stage_id}') to advance."
+                    )
+
+                return response
+            else:
+                return {
+                    "success": False,
+                    "error": "Failed to update task status",
+                    "message": "Task update failed (task or work item not found)"
+                }
+
+        except Exception as e:
+            return {
+                "success": False,
+                "error": str(e),
+                "message": "Failed to update task status"
+            }
+
+    # ====== NEW TASK MANAGEMENT TOOLS (Task 2.2) ======
+
+    def aceflow_v4_suggest_tasks(
+        self,
+        work_item_id: str,
+        requirement: str,
+        max_tasks: int = 10
+    ) -> Dict[str, Any]:
+        """Suggest tasks for a work item (v4.0 - AI-driven task breakdown).
+
+        Args:
+            work_item_id: Work item ID (must be FEATURE type)
+            requirement: Requirement description for task suggestion
+            max_tasks: Maximum number of tasks to suggest
+
+        Returns:
+            Dict with suggested tasks
+        """
+        if not V4_AVAILABLE:
+            return {
+                "success": False,
+                "error": "v4.0 workflow system not available",
+                "message": "Please ensure aceflow package is properly installed"
+            }
+
+        try:
+            work_item = self.v4_engine.state_manager.get_work_item(work_item_id)
+            if not work_item:
+                return {
+                    "success": False,
+                    "error": "Work item not found",
+                    "message": f"Work item '{work_item_id}' not found"
+                }
+
+            suggestions = self.task_manager.suggest_tasks(
+                work_item=work_item,
+                requirement=requirement,
+                max_tasks=max_tasks
+            )
+
+            return {
+                "success": True,
+                "work_item_id": work_item_id,
+                "count": len(suggestions),
+                "suggestions": [s.to_dict() for s in suggestions],
+                "message": f"Generated {len(suggestions)} task suggestions for '{work_item.title}'"
+            }
+
+        except Exception as e:
+            return {
+                "success": False,
+                "error": str(e),
+                "message": "Failed to suggest tasks"
+            }
+
+    def aceflow_v4_create_tasks(
+        self,
+        work_item_id: str,
+        tasks: List[Dict[str, Any]]
+    ) -> Dict[str, Any]:
+        """Batch create tasks for a work item (v4.0 - after user confirmation).
+
+        Args:
+            work_item_id: Work item ID (must be FEATURE type)
+            tasks: List of task dictionaries with task_id, title, description, dependencies
+
+        Returns:
+            Dict with creation status
+        """
+        if not V4_AVAILABLE:
+            return {
+                "success": False,
+                "error": "v4.0 workflow system not available",
+                "message": "Please ensure aceflow package is properly installed"
+            }
+
+        try:
+            success = self.task_manager.create_tasks(work_item_id, tasks)
+
+            if success:
+                work_item = self.v4_engine.state_manager.get_work_item(work_item_id)
+                return {
+                    "success": True,
+                    "work_item_id": work_item_id,
+                    "tasks_created": len(tasks),
+                    "total_tasks": len(work_item.tasks) if work_item else 0,
+                    "message": f"Created {len(tasks)} tasks successfully"
+                }
+            else:
+                return {
+                    "success": False,
+                    "error": "Failed to create tasks",
+                    "message": "Task creation failed (work item may not support tasks or not found)"
+                }
+
+        except Exception as e:
+            return {
+                "success": False,
+                "error": str(e),
+                "message": "Failed to create tasks"
+            }
+
+    def aceflow_v4_get_task_context(
+        self,
+        work_item_id: str,
+        task_id: str
+    ) -> Dict[str, Any]:
+        """Get task context for AI assistance (v4.0).
+
+        Args:
+            work_item_id: Work item ID
+            task_id: Task ID to get context for
+
+        Returns:
+            Dict with task context including related tasks, work item info, and progress
+        """
+        if not V4_AVAILABLE:
+            return {
+                "success": False,
+                "error": "v4.0 workflow system not available",
+                "message": "Please ensure aceflow package is properly installed"
+            }
+
+        try:
+            context = self.task_manager.get_task_context(work_item_id, task_id)
+
+            if 'error' in context:
+                return {
+                    "success": False,
+                    "error": context['error'],
+                    "message": f"Failed to get context: {context['error']}"
+                }
+
+            return {
+                "success": True,
+                "context": context,
+                "message": f"Retrieved context for task '{task_id}'"
+            }
+
+        except Exception as e:
+            return {
+                "success": False,
+                "error": str(e),
+                "message": "Failed to get task context"
+            }
+
+    def aceflow_v4_get_pending_tasks(
+        self,
+        work_item_id: str
+    ) -> Dict[str, Any]:
+        """Get all pending tasks that are ready to start (v4.0).
+
+        Returns tasks whose dependencies are all completed.
+
+        Args:
+            work_item_id: Work item ID
+
+        Returns:
+            Dict with list of pending tasks
+        """
+        if not V4_AVAILABLE:
+            return {
+                "success": False,
+                "error": "v4.0 workflow system not available",
+                "message": "Please ensure aceflow package is properly installed"
+            }
+
+        try:
+            pending_tasks = self.task_manager.get_pending_tasks(work_item_id)
+
+            return {
+                "success": True,
+                "work_item_id": work_item_id,
+                "count": len(pending_tasks),
+                "pending_tasks": [task.to_dict() for task in pending_tasks],
+                "message": f"Found {len(pending_tasks)} tasks ready to start"
+            }
+
+        except Exception as e:
+            return {
+                "success": False,
+                "error": str(e),
+                "message": "Failed to get pending tasks"
+            }
+
+    def aceflow_v4_get_next_task(
+        self,
+        work_item_id: str
+    ) -> Dict[str, Any]:
+        """Get the next task to work on based on dependencies and priority (v4.0).
+
+        Args:
+            work_item_id: Work item ID
+
+        Returns:
+            Dict with next task information
+        """
+        if not V4_AVAILABLE:
+            return {
+                "success": False,
+                "error": "v4.0 workflow system not available",
+                "message": "Please ensure aceflow package is properly installed"
+            }
+
+        try:
+            next_task = self.task_manager.get_next_task(work_item_id)
+
+            if next_task:
+                return {
+                    "success": True,
+                    "has_next_task": True,
+                    "next_task": next_task.to_dict(),
+                    "message": f"Next task: {next_task.title}"
+                }
+            else:
+                return {
+                    "success": True,
+                    "has_next_task": False,
+                    "next_task": None,
+                    "message": "No pending tasks available (all completed or dependencies not met)"
+                }
+
+        except Exception as e:
+            return {
+                "success": False,
+                "error": str(e),
+                "message": "Failed to get next task"
+            }
+
+    # ====== CODE GENERATION TOOLS (Task 3.2) ======
+
+    def aceflow_v4_request_code_generation(
+        self,
+        work_item_id: str,
+        task_id: str,
+        design_doc: Dict[str, Any],
+        language: str = "python",
+        complexity: str = "medium"
+    ) -> Dict[str, Any]:
+        """Request code generation strategy and skeleton (v4.0).
+
+        Returns generation order, code skeleton, and implementation guidance.
+
+        Args:
+            work_item_id: Work item ID
+            task_id: Task ID requesting code generation
+            design_doc: Design document containing:
+                - feature_name: Name of the feature
+                - classes: List of class definitions
+                - functions: List of function definitions
+                - interfaces: List of interface definitions (optional)
+            language: Programming language (python/javascript/typescript/java/go)
+            complexity: Task complexity (low/medium/high)
+
+        Returns:
+            Dict with generation strategy, code skeleton, and reminders
+
+        Example:
+            >>> aceflow_v4_request_code_generation(
+                work_item_id="work_abc123",
+                task_id="task_1",
+                design_doc={
+                    "feature_name": "UserManager",
+                    "classes": [{
+                        "name": "UserManager",
+                        "methods": [
+                            {"name": "__init__"},
+                            {"name": "create_user", "parameters": ["username", "email"], "returns": "User"}
+                        ]
+                    }],
+                    "functions": []
+                },
+                language="python",
+                complexity="medium"
+            )
+        """
+        if not V4_AVAILABLE:
+            return {
+                "success": False,
+                "error": "v4.0 workflow system not available",
+                "message": "Please ensure aceflow package is properly installed"
+            }
+
+        try:
+            # Verify work item and task exist
+            work_item = self.v4_engine.state_manager.get_work_item(work_item_id)
+            if not work_item:
+                return {
+                    "success": False,
+                    "error": f"Work item '{work_item_id}' not found",
+                    "message": "Invalid work item ID"
+                }
+
+            task = work_item.get_task_by_id(task_id)
+            if not task:
+                return {
+                    "success": False,
+                    "error": f"Task '{task_id}' not found in work item '{work_item_id}'",
+                    "message": "Invalid task ID"
+                }
+
+            # Get generation order suggestion
+            task_description = design_doc.get('feature_name', task.title)
+            generation_steps = self.code_generator.suggest_generation_order(
+                task_description=task_description,
+                language=language,
+                complexity=complexity
+            )
+
+            # Generate code skeleton
+            skeleton = self.code_generator.generate_code_skeleton(
+                design=design_doc,
+                language=language
+            )
+
+            # Build response
+            return {
+                "success": True,
+                "work_item_id": work_item_id,
+                "task_id": task_id,
+                "strategy": {
+                    "order": [step.title for step in generation_steps],
+                    "steps": [step.to_dict() for step in generation_steps],
+                    "total_estimated_lines": sum(
+                        step.estimated_lines for step in generation_steps
+                        if step.estimated_lines
+                    )
+                },
+                "skeleton": {
+                    "language": skeleton.language.value,
+                    "content": skeleton.content,
+                    "structure": skeleton.structure,
+                    "placeholders": skeleton.placeholders,
+                    "next_steps": skeleton.next_steps
+                },
+                "reminder": (
+                    f"📝 代码结构已生成（{skeleton.language.value}）。\n"
+                    f"建议按以下顺序实现：{' → '.join([step.title for step in generation_steps])}\n"
+                    f"请先确认代码结构符合需求，然后按TODO标记逐步实现功能。"
+                ),
+                "message": f"Code generation strategy created for task '{task.title}'"
+            }
+
+        except ValueError as e:
+            return {
+                "success": False,
+                "error": str(e),
+                "message": "Invalid language or design document"
+            }
+        except Exception as e:
+            return {
+                "success": False,
+                "error": str(e),
+                "message": "Failed to generate code strategy"
+            }
+
+    # ====== MEMORY SYSTEM TOOLS (Task 4.7) ======
+
+    def aceflow_v4_extract_memories(
+        self,
+        work_item_id: str,
+        stage_id: str,
+        stage_output: str
+    ) -> Dict[str, Any]:
+        """Extract technical decisions and lessons from stage output (v4.0).
+
+        Automatically detects and extracts structured memories from unstructured text.
+        Returns suggestions that need user confirmation before storage.
+
+        Args:
+            work_item_id: Work item ID
+            stage_id: Stage ID where output was generated
+            stage_output: The text output from completing the stage
+
+        Returns:
+            Dict with detected decisions and lessons (unconfirmed)
+
+        Example:
+            >>> aceflow_v4_extract_memories(
+                work_item_id="work_abc123",
+                stage_id="design",
+                stage_output="We decided to use PostgreSQL for its JSONB support..."
+            )
+        """
+        if not V4_AVAILABLE:
+            return {
+                "success": False,
+                "error": "v4.0 workflow system not available",
+                "message": "Please ensure aceflow package is properly installed"
+            }
+
+        try:
+            # Extract memories
+            result = self.memory_extractor.extract_from_stage_output(
+                stage_output=stage_output,
+                work_item_id=work_item_id,
+                stage_id=stage_id
+            )
+
+            # result is a dict with 'decisions', 'lessons', and 'summary'
+            decisions_count = len(result['decisions'])
+            lessons_count = len(result['lessons'])
+
+            return {
+                "success": True,
+                "extraction_result": result,
+                "decisions_detected": decisions_count,
+                "lessons_detected": lessons_count,
+                "reminder": (
+                    f"📝 检测到 {decisions_count} 个技术决策和 {lessons_count} 个经验教训。\n"
+                    f"请使用 aceflow_v4_confirm_decision 和 aceflow_v4_confirm_lesson 确认并存储这些记忆。"
+                ),
+                "message": f"Extracted {decisions_count} decisions and {lessons_count} lessons"
+            }
+
+        except Exception as e:
+            return {
+                "success": False,
+                "error": str(e),
+                "message": "Failed to extract memories"
+            }
+
+    def aceflow_v4_confirm_decision(
+        self,
+        decision: Dict[str, Any],
+        work_item_id: str,
+        stage_id: str
+    ) -> Dict[str, Any]:
+        """Confirm and store a detected technical decision (v4.0).
+
+        ⚠️ IMPORTANT: This stores the decision permanently. Only call after user confirms
+        the auto-detected decision is accurate and complete.
+
+        Args:
+            decision: Decision dict with: title, decision, reason, scope, alternatives, tech_stack, impact
+            work_item_id: Work item ID
+            stage_id: Stage ID where decision was made
+
+        Returns:
+            Dict with stored decision details
+
+        Example:
+            >>> aceflow_v4_confirm_decision(
+                decision={
+                    "title": "Use PostgreSQL",
+                    "decision": "Choose PostgreSQL as primary database",
+                    "reason": "JSONB support, ACID compliance, proven reliability",
+                    "scope": "architecture",
+                    "alternatives": ["MySQL", "MongoDB"],
+                    "tech_stack": ["PostgreSQL", "pg_vector"],
+                    "impact": "All data access patterns must support relational model"
+                },
+                work_item_id="work_abc123",
+                stage_id="design"
+            )
+        """
+        if not V4_AVAILABLE:
+            return {
+                "success": False,
+                "error": "v4.0 workflow system not available",
+                "message": "Please ensure aceflow package is properly installed"
+            }
+
+        try:
+            # Convert scope string to enum
+            scope_str = decision.get('scope', 'module')
+            scope = DecisionScope(scope_str.lower())
+
+            # Store decision
+            decision_obj = self.memory_manager.record_tech_decision(
+                title=decision['title'],
+                decision=decision['decision'],
+                reason=decision['reason'],
+                scope=scope,
+                alternatives=decision.get('alternatives', []),
+                tech_stack=decision.get('tech_stack', []),
+                impact=decision.get('impact', ''),
+                work_item_id=work_item_id,
+                stage_id=stage_id,
+                tags=decision.get('tags', [])
+            )
+
+            return {
+                "success": True,
+                "decision_id": decision_obj.decision_id,
+                "message": f"✅ Technical decision '{decision['title']}' stored successfully",
+                "reminder": "💡 此决策已永久存储，将在未来相关阶段自动注入。"
+            }
+
+        except ValueError as e:
+            return {
+                "success": False,
+                "error": str(e),
+                "message": "Invalid decision scope or data"
+            }
+        except Exception as e:
+            return {
+                "success": False,
+                "error": str(e),
+                "message": "Failed to store decision"
+            }
+
+    def aceflow_v4_confirm_lesson(
+        self,
+        lesson: Dict[str, Any]
+    ) -> Dict[str, Any]:
+        """Confirm and store a detected lesson learned (v4.0).
+
+        ⚠️ IMPORTANT: This stores the lesson permanently. Only call after user confirms
+        the auto-detected lesson is valuable and actionable.
+
+        Args:
+            lesson: Lesson dict with: title, content, category, what_happened, what_learned,
+                   how_to_apply, applicability, applicable_scenarios
+
+        Returns:
+            Dict with stored lesson details
+
+        Example:
+            >>> aceflow_v4_confirm_lesson(
+                lesson={
+                    "title": "JWT Key Management",
+                    "content": "Never hardcode JWT secrets",
+                    "category": "best_practice",
+                    "what_happened": "Hardcoded JWT secret in code led to security audit finding",
+                    "what_learned": "JWT secrets must be stored in environment variables or key management services",
+                    "how_to_apply": "Use environment variables for JWT_SECRET in all environments",
+                    "applicability": "general",
+                    "applicable_scenarios": ["authentication", "security", "api_design"]
+                }
+            )
+        """
+        if not V4_AVAILABLE:
+            return {
+                "success": False,
+                "error": "v4.0 workflow system not available",
+                "message": "Please ensure aceflow package is properly installed"
+            }
+
+        try:
+            # Convert category string to enum
+            category_str = lesson.get('category', 'technical')
+            # LessonCategory enum values are lowercase (e.g., "best_practice")
+            category = LessonCategory(category_str)
+
+            # Store lesson
+            lesson_obj = self.memory_manager.record_lesson(
+                title=lesson['title'],
+                content=lesson['content'],
+                category=category,
+                what_happened=lesson['what_happened'],
+                what_learned=lesson['what_learned'],
+                how_to_apply=lesson['how_to_apply'],
+                applicability=lesson.get('applicability', 'general'),
+                applicable_scenarios=lesson.get('applicable_scenarios', []),
+                tags=lesson.get('tags', [])
+            )
+
+            return {
+                "success": True,
+                "lesson_id": lesson_obj.lesson_id,
+                "message": f"✅ Lesson '{lesson['title']}' stored successfully",
+                "reminder": "📚 ��经验教训已永久存储，将在未来类似场景中提醒使用。"
+            }
+
+        except ValueError as e:
+            return {
+                "success": False,
+                "error": str(e),
+                "message": "Invalid lesson category or data"
+            }
+        except Exception as e:
+            return {
+                "success": False,
+                "error": str(e),
+                "message": "Failed to store lesson"
+            }
+
+    def aceflow_v4_inject_memories(
+        self,
+        template_content: str,
+        context: Dict[str, Any],
+        include_v3_memories: bool = True,
+        include_decisions: bool = True,
+        include_lessons: bool = True,
+        include_documents: bool = True
+    ) -> Dict[str, Any]:
+        """Inject relevant memories into a stage template (v4.0).
+
+        Replaces {{project_memory}} placeholder with formatted, relevant memories.
+
+        Args:
+            template_content: Template content with {{project_memory}} placeholder
+            context: MemoryInjectionContext dict with:
+                - work_item_id: Work item ID
+                - work_item_type: Workflow type (feature/bugfix/refactor/etc)
+                - work_item_title: Work item title
+                - work_item_description: Work item description
+                - stage_id: Current stage ID
+                - stage_name: Current stage name
+                - stage_type: Stage type (design/implementation/review/etc)
+                - max_memories: Max memories per type (default 5)
+                - min_relevance: Minimum relevance score (default 0.3)
+                - search_keywords: List of keywords for search
+                - search_tags: List of tags for filtering
+            include_v3_memories: Include v3.0 generic memories
+            include_decisions: Include technical decisions
+            include_lessons: Include lessons learned
+            include_documents: Include document references
+
+        Returns:
+            Dict with injected template and injection statistics
+
+        Example:
+            >>> aceflow_v4_inject_memories(
+                template_content="# Design\\n\\n{{project_memory}}\\n\\n## Tasks\\n...",
+                context={
+                    "work_item_id": "work_abc123",
+                    "work_item_type": "feature",
+                    "work_item_title": "User Authentication",
+                    "stage_id": "design",
+                    "stage_name": "Design Phase",
+                    "max_memories": 5,
+                    "search_keywords": ["authentication", "jwt"],
+                    "search_tags": ["security"]
+                }
+            )
+        """
+        if not V4_AVAILABLE:
+            return {
+                "success": False,
+                "error": "v4.0 workflow system not available",
+                "message": "Please ensure aceflow package is properly installed"
+            }
+
+        try:
+            # Create MemoryInjectionContext object
+            injection_context = MemoryInjectionContext(
+                work_item_id=context['work_item_id'],
+                work_item_type=context['work_item_type'],
+                work_item_title=context['work_item_title'],
+                work_item_description=context.get('work_item_description', ''),
+                stage_id=context['stage_id'],
+                stage_name=context['stage_name'],
+                stage_type=context.get('stage_type', context['stage_id']),
+                max_memories=context.get('max_memories', 5),
+                min_relevance=context.get('min_relevance', 0.3),
+                search_keywords=context.get('search_keywords', []),
+                search_tags=context.get('search_tags', [])
+            )
+
+            # Inject memories
+            injected_template, result = self.memory_injector.inject_memories_into_template(
+                template_content=template_content,
+                context=injection_context,
+                include_v3_memories=include_v3_memories,
+                include_decisions=include_decisions,
+                include_lessons=include_lessons,
+                include_documents=include_documents
+            )
+
+            return {
+                "success": True,
+                "injected_template": injected_template,
+                "injection_result": result.to_dict(),
+                "total_memories": result.total_count,
+                "reminder": (
+                    f"📝 已注入 {result.total_count} 条项目记忆（"
+                    f"决策: {result.decisions_count}, "
+                    f"教训: {result.lessons_count}, "
+                    f"背景: {result.v3_memories_count}"
+                    f"）到模板中。"
+                ),
+                "message": f"Injected {result.total_count} memories into template"
+            }
+
+        except KeyError as e:
+            return {
+                "success": False,
+                "error": f"Missing required context field: {e}",
+                "message": "Invalid injection context"
+            }
+        except Exception as e:
+            return {
+                "success": False,
+                "error": str(e),
+                "message": "Failed to inject memories"
+            }
+
+    def aceflow_v4_preview_injection(
+        self,
+        context: Dict[str, Any]
+    ) -> Dict[str, Any]:
+        """Preview memory injection without actually injecting (v4.0).
+
+        Shows what memories would be injected for the given context.
+
+        Args:
+            context: MemoryInjectionContext dict (same as aceflow_v4_inject_memories)
+
+        Returns:
+            Dict with injection summary and preview
+
+        Example:
+            >>> aceflow_v4_preview_injection(
+                context={
+                    "work_item_id": "work_abc123",
+                    "work_item_type": "feature",
+                    "stage_id": "design",
+                    "stage_name": "Design Phase",
+                    "search_keywords": ["authentication"]
+                }
+            )
+        """
+        if not V4_AVAILABLE:
+            return {
+                "success": False,
+                "error": "v4.0 workflow system not available",
+                "message": "Please ensure aceflow package is properly installed"
+            }
+
+        try:
+            # Create MemoryInjectionContext object
+            injection_context = MemoryInjectionContext(
+                work_item_id=context['work_item_id'],
+                work_item_type=context['work_item_type'],
+                work_item_title=context.get('work_item_title', ''),
+                work_item_description=context.get('work_item_description', ''),
+                stage_id=context['stage_id'],
+                stage_name=context['stage_name'],
+                stage_type=context.get('stage_type', context['stage_id']),
+                max_memories=context.get('max_memories', 5),
+                min_relevance=context.get('min_relevance', 0.3),
+                search_keywords=context.get('search_keywords', []),
+                search_tags=context.get('search_tags', [])
+            )
+
+            # Get injection summary
+            summary = self.memory_injector.get_injection_summary(injection_context)
+
+            return {
+                "success": True,
+                "summary": summary,
+                "total_memories": summary['counts']['total'],
+                "message": f"Found {summary['counts']['total']} relevant memories for injection"
+            }
+
+        except KeyError as e:
+            return {
+                "success": False,
+                "error": f"Missing required context field: {e}",
+                "message": "Invalid injection context"
+            }
+        except Exception as e:
+            return {
+                "success": False,
+                "error": str(e),
+                "message": "Failed to preview injection"
+            }
+
+    def aceflow_v4_list_decisions(
+        self,
+        scope: Optional[str] = None,
+        tags: Optional[List[str]] = None,
+        work_item_id: Optional[str] = None
+    ) -> Dict[str, Any]:
+        """List all technical decisions with optional filtering (v4.0).
+
+        Args:
+            scope: Filter by decision scope (local/module/architecture/project)
+            tags: Filter by tags
+            work_item_id: Filter by work item ID
+
+        Returns:
+            Dict with list of decisions
+
+        Example:
+            >>> aceflow_v4_list_decisions(scope="architecture", tags=["database"])
+        """
+        if not V4_AVAILABLE:
+            return {
+                "success": False,
+                "error": "v4.0 workflow system not available",
+                "message": "Please ensure aceflow package is properly installed"
+            }
+
+        try:
+            # Get all decisions
+            all_decisions = self.memory_manager.list_decisions()
+
+            # Apply filters
+            filtered_decisions = all_decisions
+
+            if scope:
+                scope_enum = DecisionScope(scope.lower())
+                filtered_decisions = [d for d in filtered_decisions if d.scope == scope_enum]
+
+            if tags:
+                filtered_decisions = [
+                    d for d in filtered_decisions
+                    if any(tag in d.tags for tag in tags)
+                ]
+
+            if work_item_id:
+                filtered_decisions = [
+                    d for d in filtered_decisions
+                    if d.work_item_id == work_item_id
+                ]
+
+            return {
+                "success": True,
+                "count": len(filtered_decisions),
+                "decisions": [d.to_dict() for d in filtered_decisions],
+                "message": f"Found {len(filtered_decisions)} technical decisions"
+            }
+
+        except ValueError as e:
+            return {
+                "success": False,
+                "error": str(e),
+                "message": "Invalid scope value"
+            }
+        except Exception as e:
+            return {
+                "success": False,
+                "error": str(e),
+                "message": "Failed to list decisions"
+            }
+
+    def aceflow_v4_list_lessons(
+        self,
+        category: Optional[str] = None,
+        applicability: Optional[str] = None,
+        tags: Optional[List[str]] = None
+    ) -> Dict[str, Any]:
+        """List all lessons learned with optional filtering (v4.0).
+
+        Args:
+            category: Filter by category (technical/process/team/tooling/best_practice)
+            applicability: Filter by applicability (specific/general/universal)
+            tags: Filter by tags
+
+        Returns:
+            Dict with list of lessons
+
+        Example:
+            >>> aceflow_v4_list_lessons(category="best_practice", applicability="general")
+        """
+        if not V4_AVAILABLE:
+            return {
+                "success": False,
+                "error": "v4.0 workflow system not available",
+                "message": "Please ensure aceflow package is properly installed"
+            }
+
+        try:
+            # Get all lessons
+            all_lessons = self.memory_manager.list_lessons()
+
+            # Apply filters
+            filtered_lessons = all_lessons
+
+            if category:
+                # LessonCategory enum values are lowercase (e.g., "best_practice")
+                category_enum = LessonCategory(category)
+                filtered_lessons = [l for l in filtered_lessons if l.category == category_enum]
+
+            if applicability:
+                filtered_lessons = [
+                    l for l in filtered_lessons
+                    if l.applicability == applicability
+                ]
+
+            if tags:
+                filtered_lessons = [
+                    l for l in filtered_lessons
+                    if any(tag in l.tags for tag in tags)
+                ]
+
+            return {
+                "success": True,
+                "count": len(filtered_lessons),
+                "lessons": [l.to_dict() for l in filtered_lessons],
+                "message": f"Found {len(filtered_lessons)} lessons learned"
+            }
+
+        except ValueError as e:
+            return {
+                "success": False,
+                "error": str(e),
+                "message": "Invalid category value"
+            }
+        except Exception as e:
+            return {
+                "success": False,
+                "error": str(e),
+                "message": "Failed to list lessons"
+            }
+
+    def aceflow_v4_get_decision(
+        self,
+        decision_id: str
+    ) -> Dict[str, Any]:
+        """Get a specific technical decision by ID (v4.0).
+
+        Args:
+            decision_id: Decision ID
+
+        Returns:
+            Dict with decision details
+
+        Example:
+            >>> aceflow_v4_get_decision(decision_id="dec_abc123")
+        """
+        if not V4_AVAILABLE:
+            return {
+                "success": False,
+                "error": "v4.0 workflow system not available",
+                "message": "Please ensure aceflow package is properly installed"
+            }
+
+        try:
+            decision = self.memory_manager.get_decision(decision_id)
+
+            if not decision:
+                return {
+                    "success": False,
+                    "error": f"Decision '{decision_id}' not found",
+                    "message": "Decision not found"
+                }
+
+            return {
+                "success": True,
+                "decision": decision.to_dict(),
+                "message": f"Retrieved decision '{decision.title}'"
+            }
+
+        except Exception as e:
+            return {
+                "success": False,
+                "error": str(e),
+                "message": "Failed to get decision"
+            }
+
+    def aceflow_v4_get_lesson(
+        self,
+        lesson_id: str
+    ) -> Dict[str, Any]:
+        """Get a specific lesson learned by ID (v4.0).
+
+        Args:
+            lesson_id: Lesson ID
+
+        Returns:
+            Dict with lesson details
+
+        Example:
+            >>> aceflow_v4_get_lesson(lesson_id="lesson_abc123")
+        """
+        if not V4_AVAILABLE:
+            return {
+                "success": False,
+                "error": "v4.0 workflow system not available",
+                "message": "Please ensure aceflow package is properly installed"
+            }
+
+        try:
+            lesson = self.memory_manager.get_lesson(lesson_id)
+
+            if not lesson:
+                return {
+                    "success": False,
+                    "error": f"Lesson '{lesson_id}' not found",
+                    "message": "Lesson not found"
+                }
+
+            return {
+                "success": True,
+                "lesson": lesson.to_dict(),
+                "message": f"Retrieved lesson '{lesson.title}'"
+            }
+
+        except Exception as e:
+            return {
+                "success": False,
+                "error": str(e),
+                "message": "Failed to get lesson"
+            }
