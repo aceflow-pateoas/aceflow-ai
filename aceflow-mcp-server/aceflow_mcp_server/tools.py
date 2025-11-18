@@ -2670,3 +2670,12 @@ project_root/
                 "error": str(e),
                 "message": "Failed to get lesson"
             }
+
+    def get_v4_tool_schemas(self) -> List[Dict[str, Any]]:
+        """Get all v4.0 tool schemas for MCP server.
+
+        Returns:
+            List of tool schemas with name, description, and inputSchema
+        """
+        from .tools_v4_schemas import get_v4_tool_schemas
+        return get_v4_tool_schemas()

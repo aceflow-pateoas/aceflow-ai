@@ -21,7 +21,7 @@ from .tools import AceFlowTools
 from .mcp_output_adapter import MCPOutputAdapter
 from .tool_prompts import AceFlowToolPrompts
 from .prompt_generator import AceFlowPromptGenerator
-from .workflow.mcp.tools import WorkflowMCPTools
+# from .workflow.mcp.tools import WorkflowMCPTools  # v3.0 废弃
 from pathlib import Path
 
 # 设置日志到stderr，避免干扰stdio通信
@@ -74,8 +74,7 @@ class MCPStdioServer:
         self.tools_instance = AceFlowTools(working_directory=self.execution_context['workingDirectory'])
         self.prompt_generator = AceFlowPromptGenerator()
 
-        # 创建工作流 MCP 工具实例
-        self.workflow_tools = WorkflowMCPTools(working_directory=Path(self.execution_context['workingDirectory']))
+        # v3.0 workflow_tools 已废弃，使用 tools_instance 中的v4.0工具
         
         # 创建MCP服务器实例
         self.server = Server(self.name)
@@ -211,9 +210,9 @@ class MCPStdioServer:
                     inputSchema=tool_def["inputSchema"]
                 ))
 
-            # 2. 添加 Workflow MCP 工具（21个）
-            workflow_tool_schemas = self.workflow_tools.get_tool_schemas()
-            for schema in workflow_tool_schemas:
+            # 2. 添加 v4.0 Workflow 工具（21个）
+            v4_tool_schemas = self.tools_instance.get_v4_tool_schemas()
+            for schema in v4_tool_schemas:
                 tools.append(Tool(
                     name=schema["name"],
                     description=schema["description"],
@@ -221,7 +220,7 @@ class MCPStdioServer:
                 ))
 
             # 添加使用指导信息到日志
-            self.log(f"✅ 返回 {len(tools)} 个工具（4个Contract + 21个Workflow）")
+            self.log(f"✅ 返回 {len(tools)} 个工具（4个Contract + {len(v4_tool_schemas)}个v4.0）")
             for tool in tools:
                 self.log(f"  - {tool.name}: {tool.description[:50]}...")
 
@@ -296,16 +295,14 @@ class MCPStdioServer:
                         template=arguments.get("template")
                     )
 
-            # 2. 检查是否是 Workflow MCP 工具（新工具）
-            elif tool_name in self.workflow_tools.tools:
-                result = self.workflow_tools.execute_tool(tool_name, arguments)
-                # 转换 MCPToolResult 为标准字典格式
-                return {
-                    "success": result.success,
-                    "data": result.data,  # 修正: 使用 data 而不是 content
-                    "error": result.error,
-                    "metadata": result.metadata
-                }
+            # 2. 检查是否是 v4.0 工具
+            elif tool_name.startswith("aceflow_v4_"):
+                # 直接调用 tools_instance 上的方法
+                method = getattr(self.tools_instance, tool_name, None)
+                if method and callable(method):
+                    return method(**arguments)
+                else:
+                    raise ValueError(f"v4.0工具未实现: {tool_name}")
 
             else:
                 raise ValueError(f"未知工具: {tool_name}")
