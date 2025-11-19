@@ -5,6 +5,131 @@ All notable changes to aceflow-mcp-server will be documented in this file.
 The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.0.0/),
 and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0.html).
 
+## [4.0.0] - 2025-11-18
+
+### 🚀 Major Version Release - v4.0 Work Item-based API
+
+This is a **major breaking release** that completely redesigns the workflow API from iteration-based to Work Item-based architecture, aligning with AceFlow v4.0.
+
+#### 💥 Breaking Changes
+
+**Removed - All v3.0 Iteration-based Tools (21 tools)**
+- `aceflow_init`, `aceflow_stage`, `aceflow_validate`, `aceflow_template`
+- `memory_*` series (7 tools)
+- `code_review_*` series (3 tools)
+- `doc_*` series (3 tools)
+- `export_*` series (4 tools)
+- Other v3.0 workflow tools
+
+**Reason**: v3.0's iteration-based API is incompatible with v4.0's Work Item paradigm. All v3.0 tools have been deprecated to ensure clean migration.
+
+**Migration Path**:
+- v3.0 `aceflow_init(mode="standard")` → v4.0 `aceflow_v4_start_work_item(type="feature")`
+- v3.0 `aceflow_stage(action="next")` → v4.0 `aceflow_v4_complete_stage(work_item_id, stage_id)`
+- v3.0 `memory_record_*` → v4.0 `aceflow_v4_extract_memories()` + `aceflow_v4_confirm_*`
+
+#### ✨ Added - 21 v4.0 Work Item-based Tools
+
+**Workflow Management (4 tools)**
+- `aceflow_v4_start_work_item` - Start new work item with 6 workflow types (feature, bugfix, refactor, review, documentation, performance)
+- `aceflow_v4_get_current_work_item` - Get active work item details
+- `aceflow_v4_list_work_items` - List all work items with status filter
+- `aceflow_v4_complete_stage` - Complete current stage and advance to next
+
+**Task Management (7 tools)**
+- `aceflow_v4_add_task` - Add task to work item (Feature/Refactor only)
+- `aceflow_v4_update_task_status` - Update task status (pending/in_progress/completed/blocked)
+- `aceflow_v4_suggest_tasks` - AI-driven task breakdown and suggestions
+- `aceflow_v4_create_tasks` - Batch create tasks from suggestions
+- `aceflow_v4_get_task_context` - Get task context for AI assistance
+- `aceflow_v4_get_pending_tasks` - Get ready-to-start tasks
+- `aceflow_v4_get_next_task` - Get next recommended task based on dependencies
+
+**Code Generation (1 tool)**
+- `aceflow_v4_request_code_generation` - AI code skeleton generation with implementation guidance
+
+**Memory System (9 tools)**
+- `aceflow_v4_extract_memories` - Auto-extract technical decisions and lessons from stage output
+- `aceflow_v4_confirm_decision` - Confirm and store technical decision
+- `aceflow_v4_confirm_lesson` - Confirm and store lesson learned
+- `aceflow_v4_inject_memories` - Inject relevant memories into stage templates
+- `aceflow_v4_preview_injection` - Preview memory injection without applying
+- `aceflow_v4_list_decisions` - List technical decisions with filters
+- `aceflow_v4_list_lessons` - List lessons learned with filters
+- `aceflow_v4_get_decision` - Get specific decision by ID
+- `aceflow_v4_get_lesson` - Get specific lesson by ID
+
+#### 🎯 Improved - Enhanced Tool Discoverability
+
+**Keyword-based Tool Selection**
+- Tool descriptions now include comprehensive keyword mapping for better AI selection
+- Multi-language support (Chinese + English keywords)
+- Natural language triggers: "修bug" / "bug修复" / "fix bug" → automatically selects `type="bugfix"`
+- Context-aware workflow type selection
+
+**Examples**:
+```
+User: "修复这个登录bug"
+AI: Automatically calls aceflow_v4_start_work_item(type="bugfix", title="登录bug修复")
+
+User: "开发用户管理新功能"
+AI: Automatically calls aceflow_v4_start_work_item(type="feature", title="用户管理新功能")
+```
+
+#### 📚 Added - AI Usage Guidelines
+
+**New File**: `aceflow_mcp_server/server_instructions.md`
+- Provides clear guidance on when to use AceFlow tools
+- Workflow execution flowchart
+- Common tool combinations
+- Best practices for AI assistants (Cline, Claude Code)
+
+**New File**: `aceflow_mcp_server/tools_v4_schemas.py` (491 lines)
+- Centralized v4.0 tool schema definitions
+- Enhanced descriptions with emoji indicators
+- Structured keyword mapping
+- Comprehensive input schema documentation
+
+#### 🔧 Changed - Dependency Management
+
+**Added Dependency**:
+- `aceflow>=4.0.0` - Core v4.0 workflow engine (required for all v4.0 tools)
+
+**Impact**: MCP Server now correctly declares its dependency on the main AceFlow package, ensuring proper installation and functionality.
+
+#### 📖 Documentation
+
+**Updated**:
+- Package description to reflect v4.0 Work Item-based API
+- Version number aligned with v4.0 release
+- All references to tool counts and capabilities
+
+**Migration Guide**: See `docs/MIGRATION_V3_TO_V4.md` (in main aceflow-ai repository)
+
+#### 🧪 Testing
+
+**Status**:
+- Test suite updated to reflect v4.0 API changes
+- v3.0 compatibility tests removed (backward compatibility not maintained)
+- Integration tests require `aceflow>=4.0.0` installation
+
+#### ⚠️ Important Notes
+
+1. **No Backward Compatibility**: v3.0 tools are completely removed. Users must migrate to v4.0 API.
+2. **Requires AceFlow v4.0**: This MCP Server version requires the main `aceflow` package v4.0.0 or higher.
+3. **Breaking Change Rationale**: The architectural shift from iteration-based to work-item-based provides better flexibility, clearer API semantics, and stronger alignment with modern workflow management practices.
+
+#### 🎉 Benefits of v4.0
+
+- **Clearer Mental Model**: Work Items are easier to understand than iterations
+- **Better Task Management**: First-class task support with dependencies and priorities
+- **Smarter AI Integration**: Enhanced keyword mapping for natural language interaction
+- **Richer Memory System**: Automatic extraction and contextual injection of project knowledge
+- **Code Generation Support**: AI-assisted code skeleton generation
+- **6 Workflow Types**: Pre-configured workflows for common development scenarios
+
+---
+
 ## [3.0.2] - 2025-01-12
 
 ### 🐛 Fixed - Runtime Error in Workflow Tool Execution
